@@ -1,14 +1,15 @@
 import './Sidebar.css';
 
 interface SidebarProps {
-  currentView: 'timer' | 'garden' | 'dashboard' | 'settings';
-  onViewChange: (view: 'timer' | 'garden' | 'dashboard' | 'settings') => void;
+  currentView: 'timer' | 'garden' | 'dashboard' | 'settings' | 'app_blocker';
+  onViewChange: (view: 'timer' | 'garden' | 'dashboard' | 'settings' | 'app_blocker') => void;
 }
 
 const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
   const navItems = [
     { id: 'timer' as const, label: 'Focus Timer', icon: '⏱️' },
     { id: 'garden' as const, label: 'My Garden', icon: '🌿' },
+    { id: 'app_blocker' as const, label: 'App Blocker', icon: '🚫' },
     { id: 'dashboard' as const, label: 'Analytics', icon: '📊' },
     { id: 'settings' as const, label: 'Settings', icon: '⚙️' },
   ];

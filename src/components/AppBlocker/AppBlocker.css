@@ -1,0 +1,94 @@
+.appblocker-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.appblocker-header {
+  margin-bottom: var(--space-xs);
+}
+
+.appblocker-grid {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .appblocker-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.appblocker-input {
+  width: 100% !important;
+  text-align: left !important;
+  padding: var(--space-sm) var(--space-md) !important;
+}
+
+.empty-rules {
+  height: 250px;
+  text-align: center;
+}
+
+.empty-rule-icon {
+  font-size: 3.5rem;
+  opacity: 0.3;
+}
+
+.rules-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: var(--space-xs);
+}
+
+.rule-item-card {
+  padding: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  justify-content: flex-start !important;
+}
+
+.rule-badge {
+  font-size: 1.4rem;
+  width: 36px;
+  height: 36px;
+  background-color: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+}
+
+.rule-details {
+  flex: 1;
+}
+
+.rule-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.rule-exe {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.delete-rule-btn {
+  padding: var(--space-xs) var(--space-sm) !important;
+  font-size: 0.9rem;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  opacity: 0.4;
+  transition: opacity var(--transition-fast), border-color var(--transition-fast);
+}
+
+.delete-rule-btn:hover {
+  opacity: 1;
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
