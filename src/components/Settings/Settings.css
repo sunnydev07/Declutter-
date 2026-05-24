@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-  max-width: 800px;
+  max-width: 780px;
   margin: 0 auto;
 }
 
 .settings-header {
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .settings-section {
@@ -17,17 +17,19 @@
 }
 
 .settings-section h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding-bottom: var(--space-xs);
   border-bottom: 1px solid var(--glass-border);
-  padding-bottom: var(--space-sm);
-  margin-bottom: var(--space-xs);
-  color: var(--accent-primary);
-  font-size: 1.15rem;
 }
 
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 @media (max-width: 768px) {
@@ -40,8 +42,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-lg);
-  position: relative;
 }
 
 .setting-row {
@@ -54,82 +54,22 @@
 .setting-label {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 2px;
 }
 
 .setting-title {
   font-weight: 500;
+  font-size: 0.9rem;
   color: var(--text-primary);
 }
 
-.setting-desc {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-/* Custom Controls styling */
-.setting-select {
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  font-family: inherit;
-  outline: none;
-  cursor: pointer;
-  min-width: 140px;
-}
-
-.setting-select:focus {
-  border-color: var(--accent-primary);
-}
-
-.setting-input {
-  padding: var(--space-sm) var(--space-md);
-  border-radius: var(--radius-md);
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  font-family: inherit;
-  outline: none;
-  width: 100px;
-  text-align: center;
-}
-
-.setting-input:focus {
-  border-color: var(--accent-primary);
-}
-
-.color-presets {
-  display: flex;
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
-}
-
-.color-swatch {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform var(--transition-fast);
-}
-
-.color-swatch:hover {
-  transform: scale(1.15);
-}
-
-.color-swatch.active {
-  border-color: #fff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-}
-
-/* Toggle Switch styling */
+/* Toggle Switch */
 .switch {
   position: relative;
   display: inline-block;
-  width: 48px;
-  height: 24px;
+  width: 44px;
+  height: 22px;
+  flex-shrink: 0;
 }
 
 .switch input {
@@ -141,12 +81,9 @@
 .slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: var(--bg-tertiary);
-  transition: .3s;
+  transition: 0.3s;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
 }
@@ -154,21 +91,46 @@
 .slider:before {
   position: absolute;
   content: "";
-  height: 16px;
-  width: 16px;
+  height: 14px;
+  width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: var(--text-secondary);
-  transition: .3s;
+  background-color: var(--text-tertiary);
+  transition: 0.3s;
   border-radius: var(--radius-full);
 }
 
 input:checked + .slider {
-  background-color: rgba(16, 185, 129, 0.2);
+  background-color: var(--accent-primary-dim);
   border-color: var(--accent-primary);
 }
 
 input:checked + .slider:before {
   background-color: var(--accent-primary);
-  transform: translateX(24px);
+  transform: translateX(22px);
+}
+
+/* Color Preset Swatches */
+.color-presets {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.color-swatch:hover {
+  transform: scale(1.15);
+}
+
+.color-swatch.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
 }

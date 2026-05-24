@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-  max-width: 950px;
+  max-width: 920px;
   margin: 0 auto;
 }
 
@@ -13,7 +13,7 @@
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 @media (max-width: 768px) {
@@ -22,16 +22,28 @@
   }
 }
 
+.stats-grid .glass-card {
+  padding: var(--space-lg);
+}
+
 .stat-value-large {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--accent-primary);
-  margin: var(--space-xs) 0;
+  margin: 4px 0;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .dashboard-layout-row {
   display: grid;
-  grid-template-columns: 1.5fr 0.9fr;
+  grid-template-columns: 1.4fr 0.8fr;
   gap: var(--space-lg);
   align-items: start;
 }
@@ -42,67 +54,74 @@
   }
 }
 
+/* ─── Heatmap ─── */
 .heatmap-card {
   padding: var(--space-xl);
+}
+
+.heatmap-card h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .heatmap-months-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 4px;
   padding-left: var(--space-lg);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 
 .heatmap-grid-container {
   display: flex;
-  gap: var(--space-sm);
+  gap: 8px;
 }
 
 .heatmap-days-labels {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-tertiary);
-  padding: var(--space-xs) 0;
+  padding: 2px 0;
 }
 
 .heatmap-grid {
   display: grid;
-  grid-template-flow: column;
   grid-template-columns: repeat(24, 1fr);
-  gap: 4px;
+  gap: 3px;
   flex: 1;
 }
 
 .heatmap-cell {
   aspect-ratio: 1;
-  background-color: var(--bg-tertiary);
-  border-radius: 2px;
-  border: 1px solid var(--glass-border);
+  border-radius: 3px;
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .heatmap-cell:hover {
-  border-color: #fff;
+  outline: 1px solid rgba(255, 255, 255, 0.3);
+  outline-offset: 1px;
 }
 
-.heatmap-cell.level-0 { background-color: rgba(255,255,255,0.02); }
-.heatmap-cell.level-1 { background-color: rgba(16, 185, 129, 0.15); }
-.heatmap-cell.level-2 { background-color: rgba(16, 185, 129, 0.35); }
-.heatmap-cell.level-3 { background-color: rgba(16, 185, 129, 0.6); }
+.heatmap-cell.level-0 { background-color: rgba(255, 255, 255, 0.03); }
+.heatmap-cell.level-1 { background-color: rgba(52, 211, 153, 0.15); }
+.heatmap-cell.level-2 { background-color: rgba(52, 211, 153, 0.3); }
+.heatmap-cell.level-3 { background-color: rgba(52, 211, 153, 0.55); }
 .heatmap-cell.level-4 { background-color: var(--accent-primary); }
 
 .heatmap-legend {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  gap: 3px;
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
   margin-top: var(--space-md);
 }
 
@@ -112,37 +131,50 @@
   border-radius: 2px;
 }
 
-/* Category Progress Bars */
+/* ─── Category Progress ─── */
 .category-progress-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
+.dashboard-layout-row .glass-card h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 .category-progress-item {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: 6px;
 }
 
 .category-name-row {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+}
+
+.category-value {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
 }
 
 .category-bar-bg {
   width: 100%;
-  height: 8px;
-  background-color: var(--bg-tertiary);
+  height: 6px;
+  background-color: rgba(255, 255, 255, 0.04);
   border-radius: var(--radius-full);
   overflow: hidden;
-  border: 1px solid var(--glass-border);
 }
 
 .category-bar-fill {
   height: 100%;
-  background-color: var(--accent-primary);
+  background: linear-gradient(90deg, var(--accent-primary), #60a5fa);
   border-radius: var(--radius-full);
+  transition: width 0.5s ease;
 }

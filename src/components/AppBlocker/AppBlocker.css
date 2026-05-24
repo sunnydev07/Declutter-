@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-  max-width: 900px;
+  max-width: 880px;
   margin: 0 auto;
 }
 
@@ -23,72 +23,87 @@
   }
 }
 
+.appblocker-grid h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
 .appblocker-input {
   width: 100% !important;
   text-align: left !important;
-  padding: var(--space-sm) var(--space-md) !important;
+  padding: 8px 12px !important;
 }
 
 .empty-rules {
-  height: 250px;
+  height: 220px;
   text-align: center;
 }
 
 .empty-rule-icon {
-  font-size: 3.5rem;
-  opacity: 0.3;
+  font-size: 3rem;
+  opacity: 0.2;
 }
 
 .rules-list {
-  max-height: 400px;
+  max-height: 380px;
   overflow-y: auto;
-  padding-right: var(--space-xs);
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .rule-item-card {
-  padding: var(--space-md);
+  padding: 10px 14px;
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 12px;
   justify-content: flex-start !important;
 }
 
 .rule-badge {
-  font-size: 1.4rem;
-  width: 36px;
-  height: 36px;
+  font-size: 1.1rem;
+  width: 32px;
+  height: 32px;
   background-color: var(--bg-tertiary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .rule-details {
   flex: 1;
+  min-width: 0;
 }
 
 .rule-title {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--text-primary);
 }
 
 .rule-exe {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-family: 'Courier New', monospace;
 }
 
 .delete-rule-btn {
-  padding: var(--space-xs) var(--space-sm) !important;
-  font-size: 0.9rem;
+  padding: 4px 8px !important;
+  font-size: 0.85rem;
   background-color: transparent !important;
   border-color: transparent !important;
-  opacity: 0.4;
-  transition: opacity var(--transition-fast), border-color var(--transition-fast);
+  opacity: 0.3;
+  transition: opacity var(--transition-fast);
 }
 
 .delete-rule-btn:hover {
   opacity: 1;
-  background-color: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
+  background: rgba(248, 113, 113, 0.08) !important;
 }

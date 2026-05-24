@@ -2,57 +2,59 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
-  max-width: 950px;
+  max-width: 920px;
   margin: 0 auto;
 }
 
 .garden-header {
-  margin-bottom: var(--space-xs);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
 }
 
 .coin-counter {
-  padding: var(--space-sm) var(--space-lg);
-  border-color: var(--accent-warning);
-  background: rgba(245, 158, 11, 0.05);
+  padding: 8px 16px;
+  border-color: rgba(251, 191, 36, 0.15);
+  background: rgba(251, 191, 36, 0.04);
+  border-radius: var(--radius-full);
+  gap: 8px;
 }
 
 .coin-icon {
-  font-size: 1.3rem;
-  animation: spin-slow 8s linear infinite;
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  font-size: 1.1rem;
+  animation: spin-slow 10s linear infinite;
 }
 
 .coin-value {
   font-weight: 700;
+  font-size: 0.9rem;
   color: var(--accent-warning);
 }
 
 .garden-stats-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .stat-item {
   padding: var(--space-lg);
+  text-align: center;
 }
 
 .stat-num {
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   color: var(--accent-primary);
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-top: var(--space-xs);
+  margin-top: 4px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .garden-layout-grid {
@@ -70,52 +72,65 @@
 
 .garden-grid-card {
   padding: var(--space-xl);
-  min-height: 400px;
+  min-height: 350px;
+}
+
+.garden-grid-card h3,
+.garden-achievements-sidebar h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .empty-garden {
-  height: 300px;
+  height: 260px;
   text-align: center;
 }
 
 .empty-emoji {
-  font-size: 4rem;
-  opacity: 0.3;
+  font-size: 3.5rem;
+  opacity: 0.2;
 }
 
 .garden-plot-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-md);
-  padding: var(--space-sm) 0;
+  gap: 8px;
 }
 
 .garden-plot-cell {
-  background-color: var(--bg-tertiary);
+  background: var(--bg-tertiary);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  padding: var(--space-md) var(--space-sm);
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  padding: 12px 6px;
+  transition: all var(--transition-fast);
   cursor: help;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .garden-plot-cell:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
   border-color: var(--accent-primary);
+  box-shadow: 0 4px 16px rgba(52, 211, 153, 0.1);
 }
 
 .garden-plot-cell.wilted:hover {
   border-color: var(--accent-danger);
+  box-shadow: 0 4px 16px rgba(248, 113, 113, 0.1);
 }
 
 .plot-flora {
-  font-size: 2.2rem;
-  margin-bottom: var(--space-xs);
+  font-size: 1.8rem;
+  margin-bottom: 4px;
 }
 
 .plot-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -123,91 +138,46 @@
   text-align: center;
 }
 
+/* ─── Achievements ─── */
 .garden-achievements-sidebar {
   padding: var(--space-xl);
 }
 
 .achievements-list {
-  gap: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .achievement-item {
   padding: var(--space-md);
   justify-content: flex-start !important;
-  transition: opacity var(--transition-normal);
+  gap: 12px;
+  transition: all var(--transition-normal);
 }
 
 .achievement-item.locked {
-  opacity: 0.4;
+  opacity: 0.3;
   filter: grayscale(1);
 }
 
 .achievement-item.unlocked {
-  border-color: var(--accent-primary);
-  background: rgba(16, 185, 129, 0.02);
+  border-color: rgba(52, 211, 153, 0.15);
+  background: rgba(52, 211, 153, 0.02);
 }
 
 .badge-icon {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .badge-name {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
 }
 
 .badge-desc {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
 }
-
-/* Plant Selector Styles (Timer Grid) */
-.plant-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
-}
-
-.plant-option-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
-  text-align: left;
-  cursor: pointer;
-  justify-content: flex-start !important;
-  transition: all var(--transition-fast);
-}
-
-.plant-option-card:hover {
-  background: rgba(255,255,255,0.03);
-}
-
-.plant-option-card.active {
-  border-color: var(--accent-primary);
-  background: rgba(16, 185, 129, 0.05);
-}
-
-.plant-emoji {
-  font-size: 1.6rem;
-}
-
-.plant-name {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.plant-rarity {
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.rarity-common { color: var(--text-secondary); }
-.rarity-rare { color: var(--accent-secondary); }
-.rarity-epic { color: #d946ef; } /* Lavender/Pink */
-.rarity-legendary { color: var(--accent-warning); }
