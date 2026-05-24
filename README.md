@@ -6,6 +6,28 @@ When you set a timer to focus, Declutter means it. No Alt+Tab, no Task Manager, 
 
 ---
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="screenshots/focus-timer.png" alt="Focus Timer — Glassmorphism UI" width="100%"/>
+  <br/>
+  <em>Focus Timer — Set your duration, choose a plant seed, and lock in.</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/analytics-dashboard.png" alt="Analytics Dashboard" width="100%"/>
+  <br/>
+  <em>Analytics Dashboard — Track focus hours, success rates, and study patterns.</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/focus-garden.png" alt="Focus Garden" width="100%"/>
+  <br/>
+  <em>Focus Garden — Grow a virtual garden from your deep concentration sessions.</em>
+</p>
+
+---
+
 ## ✨ Features
 
 * **Extreme OS-Level Lock**: Uses a background Rust Windows Service to enforce the lock. It disables `taskmgr.exe`, CMD/PowerShell, blocks keyboard shortcuts (Alt+F4, Win Key), and restricts mouse movement based on your lock mode.
