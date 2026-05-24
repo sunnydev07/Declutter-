@@ -1,0 +1,166 @@
+.lockscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #05060b;
+  z-index: 9999; /* Absolute topmost overlay above Sidebar and App layout */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lockscreen-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(50px);
+  pointer-events: none;
+}
+
+.lock-mode-full .lockscreen-glow {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0) 70%);
+}
+
+.lockscreen-content {
+  max-width: 600px;
+  width: 90%;
+  text-align: center;
+  gap: var(--space-lg);
+  padding: var(--space-2xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--glass-border);
+  background: rgba(15, 17, 26, 0.7);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: fade-in-up 0.5s ease-out;
+}
+
+.sprout-icon {
+  font-size: 3.5rem;
+  animation: float-slow 4s ease-in-out infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.lockscreen-status {
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.lockscreen-mode-tag {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  letter-spacing: 0.05em;
+}
+
+.lockscreen-timer {
+  font-size: 7.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(255, 255, 255, 0.15));
+  margin: var(--space-md) 0;
+}
+
+.lock-mode-full .lockscreen-timer {
+  background: linear-gradient(180deg, #ffffff 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lockscreen-quote {
+  font-style: italic;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: var(--space-md);
+}
+
+.emergency-trigger-btn {
+  font-size: 0.9rem;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast), background-color var(--transition-fast);
+}
+
+.emergency-trigger-btn:hover {
+  opacity: 1;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--accent-danger);
+}
+
+.challenge-form {
+  width: 100%;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.challenge-instructions {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.challenge-code {
+  font-family: monospace;
+  font-size: 1.3rem;
+  background-color: var(--bg-secondary);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--accent-warning);
+  border: 1px solid var(--glass-border);
+  margin: var(--space-sm) 0;
+  display: inline-block;
+  letter-spacing: 0.1em;
+}
+
+.challenge-input {
+  width: 100% !important;
+  font-size: 1.2rem;
+  padding: var(--space-md);
+  text-align: center;
+  font-family: monospace;
+  letter-spacing: 0.1em;
+}
+
+.challenge-error {
+  color: var(--accent-danger);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.challenge-actions {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-xs);
+}
+
+.btn-danger-glow {
+  background-color: var(--accent-danger) !important;
+  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.4) !important;
+}
+
+.btn-danger-glow:hover {
+  background-color: #dc2626 !important;
+}
