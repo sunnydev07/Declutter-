@@ -45,6 +45,8 @@ const Timer: React.FC = () => {
         <LockScreen
           remainingSeconds={remainingSeconds}
           lockMode={activeSession.lockMode}
+          plantType={selectedPlantId}
+          allowEmergencyUnlock={selectedPlantId !== 'sword'}
           onUnlock={forceUnlock}
         />
       )}
@@ -94,18 +96,25 @@ const Timer: React.FC = () => {
               </button>
             ) : (
               <div className="flex-center gap-md" style={{ width: '100%' }}>
-                {isPaused ? (
-                  <button className="btn btn-primary flex-1" onClick={resumeSession}>
-                    ▶️ Resume Study
-                  </button>
-                ) : (
-                  <button className="btn btn-secondary flex-1" onClick={pauseSession}>
-                    ⏸️ Pause Session
+                {selectedPlantId !== 'sword' && (
+                  isPaused ? (
+                    <button className="btn btn-primary flex-1" onClick={resumeSession}>
+                      ▶️ Resume Study
+                    </button>
+                  ) : (
+                    <button className="btn btn-secondary flex-1" onClick={pauseSession}>
+                      ⏸️ Pause Session
+                    </button>
+                  )
+                )}
+                {selectedPlantId !== 'sword' && (
+                  <button className="btn btn-secondary btn-danger-glow flex-1" onClick={forceUnlock}>
+                    🛑 Quit Focus
                   </button>
                 )}
-                <button className="btn btn-secondary btn-danger-glow flex-1" onClick={forceUnlock}>
-                  🛑 Quit Focus
-                </button>
+                {selectedPlantId === 'sword' && (
+                  <div className="sword-active-tag">⚔️ Sword Mode — No Exit</div>
+                )}
               </div>
             )}
           </div>

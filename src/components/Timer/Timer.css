@@ -186,6 +186,45 @@
 .rarity-rare { color: var(--accent-secondary); }
 .rarity-epic { color: var(--accent-violet); }
 .rarity-legendary { color: var(--accent-warning); }
+.rarity-mythic { color: #ef4444; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+
+/* ─── Sword Plant Card ─── */
+.plant-option-card:has(.rarity-mythic) {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.plant-option-card:has(.rarity-mythic):hover:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.plant-option-card:has(.rarity-mythic).active {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  animation: pulse-sword 2.5s ease-in-out infinite;
+}
+
+@keyframes pulse-sword {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+/* ─── Sword Active Tag (Timer controls) ─── */
+.sword-active-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
 
 /* ─── Shared Form Controls ─── */
 .setting-select,

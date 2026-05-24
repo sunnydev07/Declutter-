@@ -150,3 +150,42 @@
   justify-content: center;
   gap: var(--space-md);
 }
+
+/* ─── Sword Mode ─── */
+.lock-mode-sword .lockscreen-glow {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.06), transparent 70%);
+}
+
+.lock-mode-sword .lockscreen-timer {
+  color: #ef4444;
+  text-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+}
+
+.lock-mode-sword .lockscreen-mode-tag {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.lock-mode-sword .sprout-icon {
+  animation: float-slow 3s ease-in-out infinite, sword-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes sword-pulse {
+  from { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0)); }
+  to { filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.4)); }
+}
+
+.sword-commitment-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  color: rgba(239, 68, 68, 0.7);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-top: var(--space-sm);
+}

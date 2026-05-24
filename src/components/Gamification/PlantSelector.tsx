@@ -4,7 +4,7 @@ export interface PlantType {
   id: string;
   name: string;
   emoji: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   description: string;
 }
 
@@ -14,6 +14,7 @@ export const AVAILABLE_PLANTS: PlantType[] = [
   { id: 'lavender', name: 'Lavender', emoji: '🪻', rarity: 'rare', description: 'Calming lavender fields to ease study tension.' },
   { id: 'sunflower', name: 'Sunflower', emoji: '🌻', rarity: 'epic', description: 'Bright, cheerful focus that follows light.' },
   { id: 'lotus', name: 'Mystic Lotus', emoji: '🪷', rarity: 'legendary', description: 'Grows in muddy waters. Absolute clarity.' },
+  { id: 'sword', name: 'Sword', emoji: '⚔️', rarity: 'mythic', description: 'NO ESCAPE. Once planted, you cannot break the lock. Total commitment.' },
 ];
 
 interface PlantSelectorProps {
