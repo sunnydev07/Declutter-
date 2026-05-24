@@ -1,0 +1,47 @@
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: var(--space-2xl);
+}
+
+.timer-header {
+  text-align: center;
+}
+
+.timer-header p {
+  margin-top: var(--space-sm);
+  font-size: 1.1rem;
+}
+
+.timer-card {
+  width: 450px;
+  max-width: 100%;
+  padding: var(--space-2xl);
+  gap: var(--space-xl);
+}
+
+.time-display {
+  font-size: 6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  background: linear-gradient(180deg, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+}
+
+.timer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  width: 100%;
+}
+
+.start-btn {
+  font-size: 1.2rem;
+  padding: var(--space-md);
+}
