@@ -1,6 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { FocusSession, LockMode } from '../types/session';
 import { db } from '../utils/db';
+import {
+  playSessionCompleteChime,
+  playPlantWiltedChime,
+  playTimerPausedChime,
+  playAmbientNoise,
+  stopAmbientNoise
+} from '../utils/sounds';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 
 export const useSession = () => {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
@@ -23,6 +31,7 @@ export const useSession = () => {
         setActiveSession(active);
         setRemainingSeconds(plannedSecs - elapsed);
         setIsPaused(false);
+        playAmbientNoise('rain'); // Default resume ambient
       } else {
         // Interrupted session finished while app was closed! Auto-complete it
         active.status = 'completed';
@@ -67,11 +76,30 @@ export const useSession = () => {
     setActiveSession(newSession);
     setRemainingSeconds(durationMinutes * 60);
     setIsPaused(false);
+    
+    // Start ambient background noise based on some setting, defaults to rain
+    playAmbientNoise('rain');
   };
 
   const pauseSession = () => {
     if (!activeSession) return;
     setIsPaused(true);
+    playTimerPausedChime();
+  };
+
+  const notify = async (title: string, body: string) => {
+    try {
+      let permissionGranted = await isPermissionGranted();
+      if (!permissionGranted) {
+        const permission = await requestPermission();
+        permissionGranted = permission === 'granted';
+      }
+      if (permissionGranted) {
+        sendNotification({ title, body });
+      }
+    } catch (e) {
+      console.warn("Notifications not supported in this environment");
+    }
   };
 
   const resumeSession = () => {
@@ -94,6 +122,10 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
+    
+    stopAmbientNoise();
+    playSessionCompleteChime();
+    notify("Session Complete! 🎉", "You've successfully completed your focus session and grown a new plant.");
   };
 
   const forceUnlock = () => {
@@ -111,6 +143,10 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
+    
+    stopAmbientNoise();
+    playPlantWiltedChime();
+    notify("Session Failed", "Your plant has wilted because you abandoned your focus session.");
   };
 
   return {

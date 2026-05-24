@@ -11,7 +11,9 @@ use crate::hooks::keyboard::{install_keyboard_hook, uninstall_keyboard_hook, IS_
 use crate::hooks::mouse::{install_mouse_hook, uninstall_mouse_hook, IS_MOUSE_LOCKED};
 use crate::enforcer::process::{start_process_monitor, stop_process_monitor, update_process_lists};
 use crate::enforcer::overlay::{spawn_fullscreen_overlay, close_fullscreen_overlay};
-use crate::enforcer::restrictions::{set_task_manager_disabled, set_cmd_disabled};
+use crate::enforcer::restrictions::{
+    set_task_manager_disabled, set_cmd_disabled, block_websites, unblock_websites
+};
 use crate::ipc::protocol::LockMode;
 
 pub static IS_ACTIVE: AtomicBool = AtomicBool::new(false);
@@ -68,6 +70,7 @@ pub fn check_and_recover_state() {
                     clear_state();
                     let _ = set_task_manager_disabled(false);
                     let _ = set_cmd_disabled(false);
+                    let _ = unblock_websites();
                 });
             } else {
                 // Time has passed, clear restrictions
@@ -75,6 +78,7 @@ pub fn check_and_recover_state() {
                 clear_state();
                 let _ = set_task_manager_disabled(false);
                 let _ = set_cmd_disabled(false);
+                let _ = unblock_websites();
             }
         }
     } else {
@@ -109,15 +113,26 @@ pub fn start_session(
     update_process_lists(blocklist, whitelist);
 
     // 2. Engage lock levels depending on selected intensity
+    let distracting_sites = vec![
+        "youtube.com".to_string(),
+        "reddit.com".to_string(),
+        "twitter.com".to_string(),
+        "facebook.com".to_string(),
+        "instagram.com".to_string(),
+        "tiktok.com".to_string(),
+    ];
+
     match lock_mode {
         LockMode::Soft => {}
         LockMode::App => {
             start_process_monitor();
+            let _ = block_websites(&distracting_sites);
         }
         LockMode::View => {
             IS_KEYBOARD_LOCKED.store(true, Ordering::SeqCst);
             let _ = install_keyboard_hook();
             start_process_monitor();
+            let _ = block_websites(&distracting_sites);
         }
         LockMode::Full => {
             IS_KEYBOARD_LOCKED.store(true, Ordering::SeqCst);
@@ -130,6 +145,7 @@ pub fn start_session(
             let _ = set_cmd_disabled(true);
             
             start_process_monitor();
+            let _ = block_websites(&distracting_sites);
         }
     }
 
@@ -174,6 +190,7 @@ pub fn end_session() -> Result<(), String> {
 
     let _ = set_task_manager_disabled(false);
     let _ = set_cmd_disabled(false);
+    let _ = unblock_websites();
 
     Ok(())
 }

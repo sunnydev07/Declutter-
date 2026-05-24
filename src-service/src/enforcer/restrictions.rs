@@ -102,3 +102,65 @@ pub fn set_cmd_disabled(disabled: bool) -> Result<(), String> {
         }
     }
 }
+
+const HOSTS_FILE_PATH: &str = r"C:\Windows\System32\drivers\etc\hosts";
+const DECLUTTER_HOSTS_MARKER: &str = "# --- DECLUTTER BLOCKED SITES ---";
+
+pub fn block_websites(domains: &[String]) -> Result<(), String> {
+    if domains.is_empty() {
+        return Ok(());
+    }
+
+    let mut current_content = std::fs::read_to_string(HOSTS_FILE_PATH).unwrap_or_default();
+    
+    // First, ensure we're clean
+    if current_content.contains(DECLUTTER_HOSTS_MARKER) {
+        let _ = unblock_websites();
+        current_content = std::fs::read_to_string(HOSTS_FILE_PATH).unwrap_or_default();
+    }
+
+    let mut appended = format!("\n{}\n", DECLUTTER_HOSTS_MARKER);
+    for domain in domains {
+        appended.push_str(&format!("127.0.0.1 {}\n", domain));
+        appended.push_str(&format!("127.0.0.1 www.{}\n", domain));
+    }
+    appended.push_str(&format!("{}\n", DECLUTTER_HOSTS_MARKER));
+
+    current_content.push_str(&appended);
+
+    std::fs::write(HOSTS_FILE_PATH, current_content)
+        .map_err(|e| format!("Failed to write hosts file: {}", e))
+}
+
+pub fn unblock_websites() -> Result<(), String> {
+    let current_content = std::fs::read_to_string(HOSTS_FILE_PATH).unwrap_or_default();
+    
+    if !current_content.contains(DECLUTTER_HOSTS_MARKER) {
+        return Ok(());
+    }
+
+    let mut new_content = String::new();
+    let mut in_block = false;
+
+    for line in current_content.lines() {
+        if line.trim() == DECLUTTER_HOSTS_MARKER {
+            if in_block {
+                in_block = false; // end of block
+            } else {
+                in_block = true; // start of block
+            }
+            continue;
+        }
+
+        if !in_block {
+            new_content.push_str(line);
+            new_content.push('\n');
+        }
+    }
+
+    // Clean up trailing newlines
+    let new_content = new_content.trim_end().to_string() + "\n";
+
+    std::fs::write(HOSTS_FILE_PATH, new_content)
+        .map_err(|e| format!("Failed to restore hosts file: {}", e))
+}
