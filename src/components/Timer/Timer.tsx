@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useSession } from '../../hooks/useSession';
 import { LockMode } from '../../types/session';
 import LockScreen from '../LockScreen/LockScreen';
+import PlantSelector from '../Gamification/PlantSelector';
 import './Timer.css';
 
 const PRESETS = [25, 45, 60, 120];
@@ -20,6 +21,7 @@ const Timer: React.FC = () => {
   const [duration, setDuration] = useState(25);
   const [lockMode, setLockMode] = useState<LockMode>('soft');
   const [category, setCategory] = useState('General Study');
+  const [selectedPlantId, setSelectedPlantId] = useState('oak');
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -28,7 +30,7 @@ const Timer: React.FC = () => {
   };
 
   const handleStart = () => {
-    startSession(duration, lockMode, category);
+    startSession(duration, lockMode, category, selectedPlantId);
   };
 
   // Calculate circular SVG progress ring offset
@@ -88,7 +90,7 @@ const Timer: React.FC = () => {
           <div className="session-configs flex-col gap-sm">
             {!activeSession ? (
               <button className="btn btn-primary start-btn flex-center" onClick={handleStart}>
-                🚀 Launch Session
+                🚀 Launch Focus Session
               </button>
             ) : (
               <div className="flex-center gap-md" style={{ width: '100%' }}>
@@ -159,6 +161,12 @@ const Timer: React.FC = () => {
                 <option value="Reading & Research">📖 Reading & Research</option>
               </select>
             </div>
+
+            <PlantSelector
+              selectedPlantId={selectedPlantId}
+              onSelectPlant={setSelectedPlantId}
+              disabled={activeSession !== null}
+            />
 
             <div className="flex-col gap-xs">
               <span className="setting-desc">Lock Security Strength:</span>

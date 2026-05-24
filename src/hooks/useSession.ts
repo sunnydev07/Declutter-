@@ -52,7 +52,7 @@ export const useSession = () => {
     };
   }, [activeSession, remainingSeconds, isPaused]);
 
-  const startSession = (durationMinutes: number, lockMode: LockMode, category = 'General Study') => {
+  const startSession = (durationMinutes: number, lockMode: LockMode, category = 'General Study', plantType = 'oak') => {
     const newSession: FocusSession = {
       id: Math.random().toString(36).substring(2, 9),
       startedAt: new Date().toISOString(),
@@ -60,7 +60,7 @@ export const useSession = () => {
       lockMode,
       status: 'paused', // Active/Running under mock state
       category,
-      plantType: 'Oak Tree', // Gamification placeholder
+      plantType,
     };
 
     db.saveSession(newSession);

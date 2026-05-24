@@ -1,0 +1,213 @@
+.garden-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  max-width: 950px;
+  margin: 0 auto;
+}
+
+.garden-header {
+  margin-bottom: var(--space-xs);
+}
+
+.coin-counter {
+  padding: var(--space-sm) var(--space-lg);
+  border-color: var(--accent-warning);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.coin-icon {
+  font-size: 1.3rem;
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.coin-value {
+  font-weight: 700;
+  color: var(--accent-warning);
+}
+
+.garden-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+}
+
+.stat-item {
+  padding: var(--space-lg);
+}
+
+.stat-num {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: var(--space-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.garden-layout-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .garden-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.garden-grid-card {
+  padding: var(--space-xl);
+  min-height: 400px;
+}
+
+.empty-garden {
+  height: 300px;
+  text-align: center;
+}
+
+.empty-emoji {
+  font-size: 4rem;
+  opacity: 0.3;
+}
+
+.garden-plot-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.garden-plot-cell {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-sm);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  cursor: help;
+}
+
+.garden-plot-cell:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-primary);
+}
+
+.garden-plot-cell.wilted:hover {
+  border-color: var(--accent-danger);
+}
+
+.plot-flora {
+  font-size: 2.2rem;
+  margin-bottom: var(--space-xs);
+}
+
+.plot-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
+}
+
+.garden-achievements-sidebar {
+  padding: var(--space-xl);
+}
+
+.achievements-list {
+  gap: var(--space-md);
+}
+
+.achievement-item {
+  padding: var(--space-md);
+  justify-content: flex-start !important;
+  transition: opacity var(--transition-normal);
+}
+
+.achievement-item.locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.achievement-item.unlocked {
+  border-color: var(--accent-primary);
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.badge-icon {
+  font-size: 1.8rem;
+}
+
+.badge-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.badge-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Plant Selector Styles (Timer Grid) */
+.plant-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.plant-option-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  cursor: pointer;
+  justify-content: flex-start !important;
+  transition: all var(--transition-fast);
+}
+
+.plant-option-card:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.plant-option-card.active {
+  border-color: var(--accent-primary);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.plant-emoji {
+  font-size: 1.6rem;
+}
+
+.plant-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.plant-rarity {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.rarity-common { color: var(--text-secondary); }
+.rarity-rare { color: var(--accent-secondary); }
+.rarity-epic { color: #d946ef; } /* Lavender/Pink */
+.rarity-legendary { color: var(--accent-warning); }
