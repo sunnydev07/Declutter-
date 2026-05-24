@@ -10,6 +10,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 once_cell = "1.19"
 ctrlc = "3.4"
+windows-service = "0.7.0"
 
 # Official Microsoft Windows FFI crate
 [target."cfg(target_os = \"windows\")".dependencies.windows]

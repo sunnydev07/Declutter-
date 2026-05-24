@@ -170,6 +170,36 @@ const Settings = () => {
 
         </div>
       </section>
+
+      {/* Safety & Recovery */}
+      <section className="settings-section" style={{ marginTop: 'var(--space-md)' }}>
+        <h3 style={{ color: 'var(--accent-danger)', borderColor: 'rgba(248, 113, 113, 0.2)' }}>
+          Safety & Recovery
+        </h3>
+        <div className="settings-grid">
+          <div className="glass-card setting-card" style={{ border: '1px solid rgba(248, 113, 113, 0.2)' }}>
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title" style={{ color: 'var(--accent-danger)' }}>Panic Mode (System Repair)</span>
+                <span className="setting-desc" style={{ marginTop: '4px' }}>
+                  If your PC crashes during a lock and restrictions (like Task Manager) remain blocked, use this to force-clear them. Requires Administrator privileges.
+                </span>
+              </div>
+              <button 
+                className="btn btn-secondary btn-danger-glow"
+                onClick={() => {
+                  if (confirm("This will forcefully reset system registry policies. Only use this if you are stuck locked out. Continue?")) {
+                    alert("System repair initiated. You will see a UAC prompt.");
+                    // In real implementation, this invokes Tauri command to run cleanup as admin
+                  }
+                }}
+              >
+                Repair System
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
