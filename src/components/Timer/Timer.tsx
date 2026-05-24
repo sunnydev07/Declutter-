@@ -59,33 +59,35 @@ const Timer: React.FC = () => {
       <div className="timer-grid">
         {/* Left Side: Circular Countdown Ring */}
         <div className="glass-card timer-main flex-center flex-col">
-          <div className="svg-ring-container flex-center">
-            <svg className="progress-ring" width="320" height="320">
-              <circle
-                className="progress-ring-bg"
-                stroke="rgba(255,255,255,0.03)"
-                strokeWidth="12"
-                fill="transparent"
-                r="140"
-                cx="160"
-                cy="160"
-              />
-              <circle
-                className="progress-ring-bar"
-                stroke="var(--accent-primary)"
-                strokeWidth="12"
-                fill="transparent"
-                r="140"
-                cx="160"
-                cy="160"
-                style={{
-                  strokeDasharray: '880',
-                  strokeDashoffset: strokeDashoffset.toString(),
-                }}
-              />
-            </svg>
-            <div className="time-display-large">
-              {activeSession ? formatTime(remainingSeconds) : `${duration.toString().padStart(2, '0')}:00`}
+          <div className="ring-glow-halo">
+            <div className="svg-ring-container flex-center">
+              <svg className="progress-ring" width="320" height="320">
+                <circle
+                  className="progress-ring-bg"
+                  stroke="rgba(255,255,255,0.03)"
+                  strokeWidth="12"
+                  fill="transparent"
+                  r="140"
+                  cx="160"
+                  cy="160"
+                />
+                <circle
+                  className="progress-ring-bar"
+                  stroke="var(--accent-primary)"
+                  strokeWidth="12"
+                  fill="transparent"
+                  r="140"
+                  cx="160"
+                  cy="160"
+                  style={{
+                    strokeDasharray: '880',
+                    strokeDashoffset: strokeDashoffset.toString(),
+                  }}
+                />
+              </svg>
+              <div className="time-display-large">
+                {activeSession ? formatTime(remainingSeconds) : `${duration.toString().padStart(2, '0')}:00`}
+              </div>
             </div>
           </div>
 

@@ -37,22 +37,42 @@
 
 .svg-ring-container {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 320px;
+  height: 320px;
+}
+
+/* ─── Ring Glow Halo ─── */
+.ring-glow-halo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ring-glow-halo::before {
+  content: '';
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.08), transparent 70%);
+  animation: breathe-glow 4s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .progress-ring {
   transform: rotate(-90deg);
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.15));
 }
 
 .progress-ring-bg {
-  stroke: rgba(255, 255, 255, 0.04);
+  stroke: rgba(255, 255, 255, 0.03);
 }
 
 .progress-ring-bar {
   transition: stroke-dashoffset 0.5s ease;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 10px rgba(52, 211, 153, 0.3));
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.25));
 }
 
 .time-display-large {
@@ -60,11 +80,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-family: var(--font-heading);
   font-size: 3.5rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.04em;
   color: var(--text-primary);
+  text-shadow: 0 0 30px rgba(52, 211, 153, 0.08);
 }
 
 .session-configs {
@@ -77,6 +99,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   border-radius: var(--radius-lg);
+  letter-spacing: 0.01em;
 }
 
 /* ─── Right Panel ─── */
@@ -86,13 +109,12 @@
 }
 
 .timer-sidebar h3 {
-  font-size: 0.95rem;
+  font-size: 0.78rem;
   color: var(--text-secondary);
   font-weight: 600;
   margin-bottom: var(--space-sm);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 0.8rem;
+  letter-spacing: 0.05em;
 }
 
 .presets-row {
@@ -106,12 +128,23 @@
   font-weight: 600;
   font-size: 0.85rem;
   border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.preset-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
 }
 
 .preset-btn.active {
-  background: linear-gradient(135deg, #34d399, #10b981);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.8), rgba(16, 185, 129, 0.85));
   color: var(--text-inverse);
   border-color: transparent;
+  box-shadow: 0 2px 16px rgba(52, 211, 153, 0.2);
 }
 
 .custom-input-container {
@@ -133,8 +166,8 @@
 }
 
 .plant-option-card {
-  background: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: var(--radius-md);
   padding: 8px 10px;
   text-align: left;
@@ -143,19 +176,23 @@
   transition: all var(--transition-fast);
   font-family: inherit;
   color: var(--text-primary);
+  backdrop-filter: blur(8px);
 }
 
 .plant-option-card:hover:not(:disabled) {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 
 .plant-option-card.active {
-  border-color: var(--accent-primary);
-  background: var(--accent-primary-dim);
+  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.06);
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.06);
 }
 
 .plant-option-card:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
 }
 
@@ -190,23 +227,24 @@
 
 /* ─── Sword Plant Card ─── */
 .plant-option-card:has(.rarity-mythic) {
-  border-color: rgba(239, 68, 68, 0.2);
-  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.12);
+  background: rgba(239, 68, 68, 0.03);
 }
 
 .plant-option-card:has(.rarity-mythic):hover:not(:disabled) {
-  border-color: rgba(239, 68, 68, 0.35);
-  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
 }
 
 .plant-option-card:has(.rarity-mythic).active {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
   animation: pulse-sword 2.5s ease-in-out infinite;
+  box-shadow: 0 0 24px rgba(239, 68, 68, 0.08);
 }
 
 @keyframes pulse-sword {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.15); }
   50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
 }
 
@@ -218,12 +256,14 @@
   width: 100%;
   padding: 12px;
   border-radius: var(--radius-md);
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.1);
   color: #ef4444;
   font-weight: 600;
   font-size: 0.9rem;
   letter-spacing: 0.02em;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.04);
 }
 
 /* ─── Shared Form Controls ─── */
@@ -231,19 +271,26 @@
 .setting-input {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--glass-border);
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.875rem;
   outline: none;
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
 }
 
 .setting-select:focus,
 .setting-input:focus {
-  border-color: var(--accent-primary);
+  border-color: rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.06);
+}
+
+.setting-select:hover,
+.setting-input:hover {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .setting-desc {
@@ -252,12 +299,14 @@
 }
 
 .btn-danger-glow {
-  background: rgba(248, 113, 113, 0.1) !important;
-  border-color: rgba(248, 113, 113, 0.2) !important;
+  background: rgba(248, 113, 113, 0.06) !important;
+  border-color: rgba(248, 113, 113, 0.12) !important;
   color: var(--accent-danger) !important;
+  backdrop-filter: blur(8px);
 }
 
 .btn-danger-glow:hover {
-  background: rgba(248, 113, 113, 0.18) !important;
-  border-color: rgba(248, 113, 113, 0.35) !important;
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.06);
 }

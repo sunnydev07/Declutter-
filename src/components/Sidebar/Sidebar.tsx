@@ -34,6 +34,7 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
         ))}
       </nav>
 
+      <div className="sidebar-divider" />
       <div className="sidebar-footer">
         <div className="streak-badge">🔥 5 Day Streak</div>
       </div>

@@ -1,7 +1,9 @@
 .lockscreen-overlay {
   position: fixed;
   inset: 0;
-  background-color: #050710;
+  background-color: rgba(4, 6, 14, 0.92);
+  backdrop-filter: blur(40px) saturate(1.2);
+  -webkit-backdrop-filter: blur(40px) saturate(1.2);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -14,15 +16,16 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.06), transparent 70%);
-  filter: blur(60px);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.05), transparent 70%);
+  filter: blur(80px);
   pointer-events: none;
+  animation: mesh-drift-3 20s ease-in-out infinite;
 }
 
 .lock-mode-full .lockscreen-glow {
-  background: radial-gradient(circle, rgba(248, 113, 113, 0.05), transparent 70%);
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.04), transparent 70%);
 }
 
 .lockscreen-content {
@@ -32,40 +35,57 @@
   gap: var(--space-lg);
   padding: var(--space-2xl) var(--space-xl);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--glass-border);
-  background: rgba(11, 13, 20, 0.8);
-  backdrop-filter: blur(24px);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(32px) saturate(1.3);
+  -webkit-backdrop-filter: blur(32px) saturate(1.3);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation: fade-in-up 0.5s ease-out;
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+}
+
+.lockscreen-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .sprout-icon {
   font-size: 3rem;
   animation: float-slow 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.2));
 }
 
 .lockscreen-status {
+  font-family: var(--font-heading);
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .lockscreen-mode-tag {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: rgba(255, 255, 255, 0.03);
   padding: 4px 14px;
   border-radius: var(--radius-full);
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-tertiary);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  backdrop-filter: blur(8px);
 }
 
 .lockscreen-timer {
+  font-family: var(--font-heading);
   font-size: 5.5rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -73,10 +93,13 @@
   letter-spacing: -0.05em;
   color: var(--text-primary);
   margin: var(--space-md) 0;
+  text-shadow: 0 0 40px rgba(52, 211, 153, 0.1);
+  animation: breathe-glow 4s ease-in-out infinite;
 }
 
 .lock-mode-full .lockscreen-timer {
   color: var(--accent-danger);
+  text-shadow: 0 0 40px rgba(248, 113, 113, 0.1);
 }
 
 .lockscreen-quote {
@@ -89,16 +112,18 @@
 
 .emergency-trigger-btn {
   font-size: 0.8rem;
-  opacity: 0.35;
+  opacity: 0.3;
   margin-top: var(--space-sm);
   transition: opacity var(--transition-normal);
+  backdrop-filter: blur(8px);
 }
 
 .emergency-trigger-btn:hover {
   opacity: 1;
-  background: rgba(248, 113, 113, 0.08) !important;
-  border-color: rgba(248, 113, 113, 0.2) !important;
+  background: rgba(248, 113, 113, 0.06) !important;
+  border-color: rgba(248, 113, 113, 0.15) !important;
   color: var(--accent-danger);
+  box-shadow: 0 0 20px rgba(248, 113, 113, 0.06);
 }
 
 .challenge-form {
@@ -119,14 +144,16 @@
 .challenge-code {
   font-family: 'Courier New', monospace;
   font-size: 1.1rem;
-  background-color: var(--bg-secondary);
+  background-color: rgba(255, 255, 255, 0.03);
   padding: 4px 12px;
   border-radius: var(--radius-sm);
   color: var(--accent-warning);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   margin: 6px 0;
   display: inline-block;
   letter-spacing: 0.12em;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
 }
 
 .challenge-input {
@@ -136,12 +163,16 @@
   text-align: center;
   font-family: 'Courier New', monospace;
   letter-spacing: 0.1em;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(12px);
 }
 
 .challenge-error {
   color: var(--accent-danger);
   font-size: 0.8rem;
   font-weight: 500;
+  text-shadow: 0 0 8px rgba(248, 113, 113, 0.15);
 }
 
 .challenge-actions {
@@ -153,27 +184,32 @@
 
 /* ─── Sword Mode ─── */
 .lock-mode-sword .lockscreen-glow {
-  background: radial-gradient(circle, rgba(239, 68, 68, 0.06), transparent 70%);
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.05), transparent 70%);
 }
 
 .lock-mode-sword .lockscreen-timer {
   color: #ef4444;
-  text-shadow: 0 0 30px rgba(239, 68, 68, 0.2);
+  text-shadow: 0 0 40px rgba(239, 68, 68, 0.15);
 }
 
 .lock-mode-sword .lockscreen-mode-tag {
-  background: rgba(239, 68, 68, 0.06);
-  border-color: rgba(239, 68, 68, 0.15);
+  background: rgba(239, 68, 68, 0.04);
+  border-color: rgba(239, 68, 68, 0.1);
   color: #ef4444;
+}
+
+.lock-mode-sword .lockscreen-content {
+  border-color: rgba(239, 68, 68, 0.08);
 }
 
 .lock-mode-sword .sprout-icon {
   animation: float-slow 3s ease-in-out infinite, sword-pulse 2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.3));
 }
 
 @keyframes sword-pulse {
   from { filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0)); }
-  to { filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.4)); }
+  to { filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.35)); }
 }
 
 .sword-commitment-badge {
@@ -182,10 +218,12 @@
   gap: 8px;
   padding: 10px 20px;
   border-radius: var(--radius-full);
-  background: rgba(239, 68, 68, 0.06);
-  border: 1px solid rgba(239, 68, 68, 0.12);
-  color: rgba(239, 68, 68, 0.7);
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  color: rgba(239, 68, 68, 0.65);
   font-size: 0.82rem;
   font-weight: 500;
   margin-top: var(--space-sm);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.03);
 }
