@@ -9,6 +9,7 @@ import {
   stopAmbientNoise
 } from '../utils/sounds';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import { invoke } from '@tauri-apps/api/core';
 
 export const useSession = () => {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
@@ -48,7 +49,8 @@ export const useSession = () => {
         setRemainingSeconds((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
-            completeSession();
+            // Fire async completion — errors are handled internally via try/catch
+            void completeSession();
             return 0;
           }
           return prev - 1;
@@ -61,7 +63,36 @@ export const useSession = () => {
     };
   }, [activeSession, remainingSeconds, isPaused]);
 
-  const startSession = (durationMinutes: number, lockMode: LockMode, category = 'General Study', plantType = 'oak') => {
+  const startSession = async (durationMinutes: number, lockMode: LockMode, category = 'General Study', plantType = 'oak') => {
+    // 1. Build blocklist/whitelist from the user's app rules
+    const appRules = db.getAppRules();
+    const blocklist = appRules
+      .filter((r) => r.ruleType === 'block')
+      .map((r) => r.exePath || r.appName);
+    const whitelist = appRules
+      .filter((r) => r.ruleType === 'allow')
+      .map((r) => r.exePath || r.appName);
+
+    // 2. Fetch the user's emergency unlock method
+    const settings = db.getSettings();
+    const emergencyMethod = settings.emergencyUnlockMethod || 'string';
+
+    // 3. Ask the Tauri shell to relay StartLock to the Windows Service (best-effort).
+    //    If the service or Tauri runtime isn't available (e.g. running via npm run dev),
+    //    we log a warning and proceed with the local-only session.
+    try {
+      await invoke('start_lock_session', {
+        durationMinutes,
+        lockMode,       // Tauri command will parse the string to the enum
+        blocklist,
+        whitelist,
+        emergencyMethod,
+      });
+    } catch (err: any) {
+      console.warn('[useSession] Service IPC unavailable — running local-only session:', err);
+    }
+
+    // 4. Persist the session locally and start the UI timer
     const newSession: FocusSession = {
       id: Math.random().toString(36).substring(2, 9),
       startedAt: new Date().toISOString(),
@@ -107,8 +138,16 @@ export const useSession = () => {
     setIsPaused(false);
   };
 
-  const completeSession = () => {
+  const completeSession = async () => {
     if (!activeSession) return;
+
+    // Tell the Windows Service to release all OS restrictions
+    try {
+      await invoke('stop_lock_session');
+    } catch (err) {
+      console.error('[useSession] Service stop_lock_session failed:', err);
+      // Still proceed to clear local state – we don't want to leave the UI stuck.
+    }
 
     const completed: FocusSession = {
       ...activeSession,
@@ -128,8 +167,16 @@ export const useSession = () => {
     notify("Session Complete! 🎉", "You've successfully completed your focus session and grown a new plant.");
   };
 
-  const forceUnlock = () => {
+  const forceUnlock = async () => {
     if (!activeSession) return;
+
+    // Tell the Windows Service to release all OS restrictions
+    try {
+      await invoke('stop_lock_session');
+    } catch (err) {
+      console.error('[useSession] Service stop_lock_session failed:', err);
+      // Still proceed to clear local state so the user isn't stuck.
+    }
 
     const failed: FocusSession = {
       ...activeSession,

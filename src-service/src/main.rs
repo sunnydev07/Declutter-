@@ -5,8 +5,6 @@ mod session;
 
 use std::env;
 use std::ffi::OsString;
-use std::io::{self, Write};
-use std::sync::atomic::Ordering;
 use std::time::Duration;
 use windows_service::{
     define_windows_service,
@@ -18,8 +16,7 @@ use windows_service::{
     service_dispatcher,
 };
 
-use crate::session::{start_session, end_session, IS_ACTIVE, SECONDS_REMAINING};
-use crate::ipc::protocol::LockMode;
+use crate::session::end_session;
 
 const SERVICE_NAME: &str = "DeclutterService";
 
@@ -59,11 +56,9 @@ fn run_service(_arguments: Vec<OsString>) -> windows_service::Result<()> {
         // Run state recovery logic on startup
         crate::session::check_and_recover_state();
         
-        // E.g. named pipe server starts here...
-        
-        loop {
-            tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-        }
+        // Start the named pipe IPC server — this is the main service loop.
+        // It listens on \\.\pipe\declutter_ipc and handles StartLock / StopLock / GetStatus.
+        crate::ipc::server::run_pipe_server().await;
     });
 
     status_handle.set_service_status(ServiceStatus {
@@ -101,11 +96,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "uninstall" => uninstall_service(),
             "debug" => {
                 println!("Running in debug mode (console)...");
+                println!("Named pipe server listening on \\\\.\\pipe\\declutter_ipc");
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    loop {
-                        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
-                    }
+                    crate::session::check_and_recover_state();
+                    crate::ipc::server::run_pipe_server().await;
                 });
             }
             _ => println!("Unknown command. Use: install | uninstall | debug"),
