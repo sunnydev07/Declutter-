@@ -1,3 +1,4 @@
+import { useStats } from '../../hooks/useStats';
 import './Sidebar.css';
 
 type ViewId = 'timer' | 'garden' | 'dashboard' | 'settings' | 'app_blocker';
@@ -91,6 +92,8 @@ const NavIcon = ({ name }: IconProps) => {
 };
 
 const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
+  const { currentStreak } = useStats();
+
   const navItems = [
     { id: 'timer' as const, label: 'Focus Timer', icon: 'timer' as const },
     { id: 'garden' as const, label: 'My Garden', icon: 'garden' as const },
@@ -123,7 +126,10 @@ const Sidebar = ({ currentView, onViewChange }: SidebarProps) => {
 
       <div className="sidebar-divider" />
       <div className="sidebar-footer">
-        <div className="streak-badge"><span className="streak-flame" aria-hidden="true" /> 5 Day Streak</div>
+        <div className="streak-badge">
+          <span className="streak-flame" aria-hidden="true" />
+          {currentStreak} Day{currentStreak !== 1 ? 's' : ''} Streak
+        </div>
       </div>
     </aside>
   );

@@ -108,11 +108,7 @@ const Timer: React.FC = () => {
           </div>
 
           <div className="session-configs flex-col gap-sm">
-            {!activeSession ? (
-              <button className="btn btn-primary start-btn flex-center" onClick={handleStart}>
-                Launch Focus Session
-              </button>
-            ) : (
+            {activeSession && (
               <div className="timer-active-actions flex-center gap-md">
                 {activePlantId !== 'sword' && (
                   isPaused ? (
@@ -208,6 +204,16 @@ const Timer: React.FC = () => {
                 <option value="full">Full Lock</option>
               </select>
             </section>
+
+            {!activeSession && (
+              <button
+                className="btn btn-primary start-btn flex-center"
+                onClick={handleStart}
+                style={{ marginTop: '12px', width: '100%' }}
+              >
+                Launch Focus Session
+              </button>
+            )}
           </div>
         </div>
       </div>
