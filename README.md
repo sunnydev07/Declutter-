@@ -1,12 +1,17 @@
-# 🌿 Declutter
+# Declutter
 
-**Declutter** is a hardcore, system-level focus and productivity application for Windows. It goes beyond traditional focus timers by taking **full OS-level control** of your PC during study sessions. 
+Declutter is a Windows-focused productivity app for deep work, study sessions, and strict distraction control. It combines a polished React/Tauri desktop interface with a Rust Windows service that can enforce lock modes beyond a normal focus timer.
 
-When you set a timer to focus, Declutter means it. No Alt+Tab, no Task Manager, no distracting websites, and no shortcuts. It locks you into productivity with a beautiful gamified interface that rewards consistency.
+Current release: **v0.1.0**
+
+Download the Windows installer:
+https://github.com/sunnydev07/Declutter-/releases/download/v0.1.0/Declutter_0.1.0_x64-setup.exe
+
+> Note: The installer is currently unsigned. Windows SmartScreen may show a warning until the app is code signed and builds publisher reputation.
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <p align="center">
   <img src="screenshots/focus-timer.png" alt="Focus Timer — Glassmorphism UI" width="100%"/>
@@ -28,88 +33,162 @@ When you set a timer to focus, Declutter means it. No Alt+Tab, no Task Manager, 
 
 ---
 
-## ✨ Features
+## What Declutter Does
 
-* **Extreme OS-Level Lock**: Uses a background Rust Windows Service to enforce the lock. It disables `taskmgr.exe`, CMD/PowerShell, blocks keyboard shortcuts (Alt+F4, Win Key), and restricts mouse movement based on your lock mode.
-* **4 Lock Modes**:
-  * **Full Lock**: Total lockdown. Keyboard and mouse are completely blocked. Pure focus.
-  * **View Lock**: Keyboard blocked, mouse allowed. Perfect for watching lectures or reading PDFs.
-  * **App Lock**: Input allowed, but distracting apps and websites are instantly killed/blocked.
-  * **Soft Lock**: Normal timer with warnings if you lose focus.
-* **Website & App Blocking**: Automatically manipulates the Windows `hosts` file to block distracting domains (YouTube, Reddit, TikTok) and aggressively monitors running processes to kill blocked `.exe` files.
-* **Beautiful Gamification**: Plant virtual seeds before you study. If you complete your session, your plant grows into a beautiful tree. If you give up and trigger the emergency unlock, your plant wilts. Unlock new seeds as you build streaks.
-* **The "Sword" Mode**: A special mythic seed that completely disables the "Quit Focus" emergency escape. Once you plant the Sword, you are locked in until the timer hits zero. No exceptions.
-* **Rich Analytics**: Track your focus hours, success rates, and category breakdowns with a GitHub-style heatmap contribution graph and detailed charts.
-* **Crash Recovery & Safety**: If your PC loses power during a lock, Declutter remembers. It saves its state persistently. If the timer expired while offline, restrictions are lifted on boot. If the timer is still active, restrictions instantly re-engage.
-* **Immersive Audio**: Procedural Web Audio API chimes for session alerts and HTML5 ambient noise backgrounds (Rain, Cafe) to keep you in the zone.
+- Runs as a native Windows desktop app built with Tauri 2, React 19, TypeScript, and Vite.
+- Installs `DeclutterService`, a Rust Windows service used for lock enforcement and recovery.
+- Supports multiple lock levels for different focus situations.
+- Blocks distracting apps through process monitoring.
+- Blocks distracting websites through hosts-file enforcement.
+- Protects strict sessions with keyboard hook restrictions and optional full-screen overlay behavior.
+- Tracks focus sessions, streaks, daily stats, and garden progress locally.
+- Includes safety and recovery tooling for restoring Windows policies if a lock is interrupted.
 
 ---
 
-## 🛠️ Architecture Stack
+## Lock Modes
 
-Declutter is built for extreme performance and deep Windows integration:
-* **Frontend**: React 19 + TypeScript + Vite (Glassmorphism & Vanilla CSS)
-* **Desktop Framework**: Tauri 2.0 (Lightweight, native performance)
-* **Background Daemon**: Standalone Rust Binary running as a native Windows Service
-* **IPC**: Named Pipes for ultra-fast GUI-to-Daemon communication
-* **Database**: Local SQLite via `rusqlite`
+- **Soft Lock**: A lighter focus timer for sessions where you only need self-accountability.
+- **App Lock**: Blocks selected apps and websites while leaving normal keyboard and mouse input available.
+- **View Lock**: Designed for lectures, reading, and video-based study. Adds keyboard restrictions while keeping mouse input usable.
+- **Full Lock**: The strictest mode. Adds stronger input restrictions, process enforcement, website blocking, and overlay behavior.
 
----
-
-## 🚀 How to Install & Use
-
-### Prerequisites
-* **Windows 10 or 11** (Admin privileges are strictly required).
-* If building from source: Node.js 18+, Rust (`rustup`), and the MSVC C++ build tools.
-
-### 1. Download / Install
-* *(Note: Pre-compiled binaries will be available in the Releases tab soon.)*
-* The installer requires **Administrator Privileges** (UAC) because it must install the background Windows Service (`declutter-service.exe`) that enforces the locks.
-
-### 2. Getting Started
-1. Open the app (it will also boot silently to your system tray on startup).
-2. Go to the **App Blocker** tab to select the apps/websites you want to block or whitelist.
-3. On the **Home** tab, select a focus duration (e.g., 45m).
-4. Select your **Lock Mode** (Full, View, App, Soft).
-5. Choose a **Plant** to grow (Try the *Sword* if you dare).
-6. Click **Launch Focus Session**.
-
-### 3. Emergency Escape & Panic Mode
-* **Standard Quit**: If you didn't pick the Sword seed, you can click "Quit Focus" from the overlay to abort. **Warning:** Your plant will wilt, and your streak will be broken.
-* **Panic Mode**: Declutter messes with critical system registries (like disabling Task Manager). If the daemon ever crashes or is manually uninstalled while a lock is active, open the app, go to **Settings > Safety & Recovery**, and click **Repair System Registry**. This will forcefully reset your PC's policies to normal.
+Sword Mode is available for sessions where manual unlock should be blocked until the timer naturally expires.
 
 ---
 
-## 💻 Building from Source
+## Installation
 
-To compile the app yourself:
+### Recommended: GitHub Release
 
-```bash
-# Clone the repo
-git clone https://github.com/sunnydev07/Declutter-.git
-cd Declutter-
+Download:
+https://github.com/sunnydev07/Declutter-/releases/tag/v0.1.0
 
-# Install frontend dependencies
-npm install
+Install:
 
-# Build the background Rust service
-cd src-service
-cargo build --release
-cd ..
+1. Download `Declutter_0.1.0_x64-setup.exe`.
+2. Run the installer on Windows 10 or Windows 11.
+3. Approve the administrator prompt.
+4. Launch Declutter from the Start Menu or desktop shortcut.
 
-# Build the Tauri React application & NSIS Installer
-npm run tauri build
+Admin permission is required because Declutter installs and starts the background Windows service named `DeclutterService`.
+
+### Important Install Notes
+
+- Windows x64 is required for the current installer.
+- The app is not code signed yet, so SmartScreen may warn that the publisher is unknown.
+- The installer registers `DeclutterService` during install and removes it during uninstall.
+- For first-time testing, use a short manual session before trying a long strict lock.
+
+---
+
+## Safety And Recovery
+
+Declutter can disable or restrict system behavior while a focus session is active. Use strict modes carefully.
+
+Recovery protections include:
+
+- Session state recovery under `ProgramData/Declutter`.
+- Cleanup when a session ends normally.
+- Service uninstall hooks that stop and delete `DeclutterService`.
+- Emergency repair behavior in the app for restoring Windows policies.
+- `public/failsafe/EmergencyUnlock.bat` for manual recovery support.
+
+If you are testing a new build, start with a 1-minute session before using longer lock durations.
+
+---
+
+## Architecture
+
+- **Frontend**: React 19, TypeScript, Vite
+- **Desktop shell**: Tauri 2
+- **Service**: Rust Windows service in `src-service`
+- **Desktop commands**: Rust/Tauri commands in `src-tauri`
+- **IPC**: Windows named pipe communication between app and service
+- **Local data**: Frontend persistence through `src/utils/db.ts` and `localStorage`
+- **Installer**: Tauri NSIS bundle with service install/uninstall hooks
+
+Project layout:
+
+```text
+src/          React + TypeScript frontend
+src-tauri/   Tauri desktop shell, app icons, installer config
+src-service/ Rust Windows service for lock enforcement
+screenshots/ README screenshots
 ```
 
-The resulting `perMachine` NSIS installer `.exe` will be located in `src-tauri/target/release/bundle/nsis/`.
+---
+
+## Build From Source
+
+Prerequisites:
+
+- Windows 10 or Windows 11
+- Node.js 18+
+- Rust stable MSVC toolchain
+- Microsoft C++ Build Tools
+
+Install dependencies:
+
+```powershell
+npm install
+```
+
+Run the Vite UI only:
+
+```powershell
+npm run dev
+```
+
+Build the frontend:
+
+```powershell
+npm run build
+```
+
+Check Rust crates:
+
+```powershell
+cargo check --workspace
+```
+
+Build the Windows installer:
+
+```powershell
+npm run build:exe
+```
+
+The generated installer will be created under:
+
+```text
+target/release/bundle/nsis/
+```
+
+Expected v0.1.0 output:
+
+```text
+target/release/bundle/nsis/Declutter_0.1.0_x64-setup.exe
+```
 
 ---
 
-## ⚠️ Disclaimer
+## Release Notes: v0.1.0
 
-**Declutter intentionally disables core Windows functionalities (like Task Manager) to prevent you from bypassing your study timer.** 
-While we have built extensive safety nets and crash recovery loops, use this software responsibly. Test the lock modes on short 1-minute timers before committing to a 2-hour lock!
+- Added the final Windows x64 NSIS setup installer.
+- Added installer hooks to register and remove `DeclutterService`.
+- Updated app icon assets from the Declutter icon source.
+- Added `npm run build:exe` to build the service sidecar and Tauri installer in one command.
+- Added release-ready service sidecar bundling for Tauri.
+- Added recovery-oriented service cleanup behavior for installer updates and uninstalls.
 
 ---
 
-*Built for absolute focus.*
+## Disclaimer
+
+Declutter intentionally enforces focus by changing Windows behavior during active sessions. It can affect Task Manager, command shells, keyboard shortcuts, websites, running processes, and overlays depending on the lock mode.
+
+Use it responsibly, test short sessions first, and do not use strict modes when you cannot afford interruption.
+
+---
+
+Built for focused work on Windows.
