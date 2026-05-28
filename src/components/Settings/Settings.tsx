@@ -1,5 +1,8 @@
 import { useSettings } from '../../hooks/useSettings';
 import { CoachAiMode, CoachPersona, LockMode } from '../../types/session';
+import { invoke } from '@tauri-apps/api/core';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
+import { resolveResource } from '@tauri-apps/api/path';
 import './Settings.css';
 
 const ACCENT_COLORS = [
@@ -12,6 +15,34 @@ const ACCENT_COLORS = [
 
 const Settings = () => {
   const { settings, updateSettings } = useSettings();
+
+  const handleEmergencyRepair = async () => {
+    const confirmed = window.confirm(
+      "Are you sure? This will forcefully rebuild your Windows registry policies to re-enable Task Manager. Only use if the app is broken."
+    );
+    if (!confirmed) return;
+
+    try {
+      await invoke('emergency_system_repair');
+      alert("Emergency system repair executed successfully! Task Manager, CMD, and hosts file have been restored.");
+    } catch (err: any) {
+      alert(`System repair failed: ${err}`);
+    }
+  };
+
+  const handleOpenFailsafeFolder = async () => {
+    try {
+      const resourcePath = await resolveResource('failsafe/EmergencyUnlock.bat');
+      await revealItemInDir(resourcePath);
+    } catch (err) {
+      console.warn('Failed to resolve failsafe path or reveal it, trying direct reveal:', err);
+      try {
+        await revealItemInDir('public/failsafe/EmergencyUnlock.bat');
+      } catch (innerErr) {
+        alert('Failsafe script is located in your Declutter installation folder at "public/failsafe/EmergencyUnlock.bat"');
+      }
+    }
+  };
 
   return (
     <div className="settings-container animate-fade-in-up">
@@ -233,30 +264,49 @@ const Settings = () => {
         </div>
       </section>
 
-      {/* Safety & Recovery */}
+      {/* Safety & Recovery (Panic Mode) */}
       <section className="settings-section" style={{ marginTop: 'var(--space-md)' }}>
         <h3 style={{ color: 'var(--accent-danger)', borderColor: 'rgba(248, 113, 113, 0.2)' }}>
-          Safety & Recovery
+          Safety & Recovery (Panic Mode)
         </h3>
         <div className="settings-grid">
           <div className="glass-card setting-card" style={{ border: '1px solid rgba(248, 113, 113, 0.2)' }}>
-            <div className="setting-row">
-              <div className="setting-label">
-                <span className="setting-title" style={{ color: 'var(--accent-danger)' }}>Panic Mode (System Repair)</span>
+            <div className="setting-row" style={{ alignItems: 'flex-start' }}>
+              <div className="setting-label" style={{ maxWidth: '70%' }}>
+                <span className="setting-title" style={{ color: 'var(--accent-danger)' }}>Panic Mode (System Registry Repair)</span>
                 <span className="setting-desc" style={{ marginTop: '4px' }}>
-                  If your PC crashes during a lock and restrictions (like Task Manager) remain blocked, use this to force-clear them. Requires Administrator privileges.
+                  Forcefully resets Task Manager, Command Prompt, Registry Tools restrictions, and cleans Declutter's blocked websites from the hosts file.
                 </span>
+                <div style={{ marginTop: '12px' }}>
+                  <a
+                    href="#"
+                    onClick={(e) => { e.preventDefault(); void handleOpenFailsafeFolder(); }}
+                    style={{
+                      color: 'var(--accentColor, var(--accent-primary, #10b981))',
+                      fontSize: '0.8rem',
+                      textDecoration: 'underline',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    📂 Locate Offline Emergency Unlock Script (EmergencyUnlock.bat)
+                  </a>
+                </div>
               </div>
               <button 
-                className="btn btn-secondary btn-danger-glow"
-                onClick={() => {
-                  if (confirm("This will forcefully reset system registry policies. Only use this if you are stuck locked out. Continue?")) {
-                    alert("System repair initiated. You will see a UAC prompt.");
-                    // In real implementation, this invokes Tauri command to run cleanup as admin
-                  }
+                type="button"
+                className="btn btn-secondary"
+                style={{
+                  backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                  borderColor: 'rgba(248, 113, 113, 0.3)',
+                  color: 'var(--accent-danger)',
+                  padding: '10px 18px',
+                  fontWeight: 600
                 }}
+                onClick={handleEmergencyRepair}
               >
-                Repair System
+                🚨 Execute Emergency Registry Repair
               </button>
             </div>
           </div>

@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:exe": "cargo build -p declutter-service --release && powershell -NoProfile -ExecutionPolicy Bypass -Command \"Copy-Item -LiteralPath 'target/release/declutter-service.exe' -Destination 'target/release/declutter-service-x86_64-pc-windows-msvc.exe' -Force\" && npm run tauri -- build",
     "preview": "vite preview",
     "tauri": "tauri"
   },

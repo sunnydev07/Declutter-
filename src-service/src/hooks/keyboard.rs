@@ -1,10 +1,10 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, HHOOK, KBDLLHOOKSTRUCT, WH_KEYBOARD_LL,
+    CallNextHookEx, HHOOK, KBDLLHOOKSTRUCT, LLKHF_ALTDOWN, WH_KEYBOARD_LL,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    VK_LWIN, VK_RWIN, VK_TAB, VK_ESCAPE, VK_F4, VK_MENU, VK_CONTROL
+    VK_LWIN, VK_RWIN, VK_TAB, VK_ESCAPE, VK_F4, VK_CONTROL
 };
 
 // Controls if keyboard input should be blocked
@@ -29,7 +29,7 @@ pub unsafe extern "system" fn low_level_keyboard_proc(
         let vk_code = kb_struct.vkCode as u16;
 
         // Extract key modifiers
-        let alt_pressed = (kb_struct.flags & 0x20) != 0; // Context flag checks if Alt is down
+        let alt_pressed = (kb_struct.flags & LLKHF_ALTDOWN).0 != 0;
         let ctrl_pressed = (windows::Win32::UI::Input::KeyboardAndMouse::GetAsyncKeyState(VK_CONTROL.0 as i32) as u16 & 0x8000) != 0;
 
         // Block specific high-risk system key combinations
@@ -69,7 +69,7 @@ pub unsafe extern "system" fn low_level_keyboard_proc(
 
 pub fn install_keyboard_hook() -> Result<(), String> {
     unsafe {
-        if H_KEYBOARD_HOOK.is_some() {
+        if let Some(_) = H_KEYBOARD_HOOK {
             return Ok(());
         }
 

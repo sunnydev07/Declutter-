@@ -3,11 +3,12 @@ use std::sync::Mutex;
 use std::thread;
 use once_cell::sync::Lazy;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
+use windows::Win32::Graphics::Gdi::HBRUSH;
 use windows::Win32::UI::WindowsAndMessaging::{
     CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, RegisterClassW,
     ShowWindow, HWND_TOPMOST, MSG, SW_SHOW, WM_DESTROY, WNDCLASSW, WS_EX_TOPMOST,
     WS_POPUP, WS_VISIBLE, GetSystemMetrics, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN,
-    SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN, CS_HREDRAW, CS_VREDRAW, HBRUSH,
+    SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN, CS_HREDRAW, CS_VREDRAW,
 };
 use windows::core::w;
 
@@ -63,7 +64,7 @@ pub fn spawn_fullscreen_overlay() -> Result<(), String> {
             let height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
             // Create topmost, borderless, popup window
-            let hwnd_result = CreateWindowExW(
+            let hwnd = CreateWindowExW(
                 WS_EX_TOPMOST,
                 class_name,
                 w!("Declutter Focus Lock"),
@@ -78,40 +79,37 @@ pub fn spawn_fullscreen_overlay() -> Result<(), String> {
                 None,
             );
 
-            match hwnd_result {
-                Ok(hwnd) => {
-                    {
-                        if let Ok(mut handle_guard) = H_OVERLAY_WINDOW.lock() {
-                            *handle_guard = Some(hwnd);
-                        }
-                    }
-
-                    // Force Topmost status explicitly
-                    let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowPos(
-                        hwnd,
-                        HWND_TOPMOST,
-                        x,
-                        y,
-                        width,
-                        height,
-                        windows::Win32::UI::WindowsAndMessaging::SET_WINDOW_POS_FLAGS(0),
-                    );
-
-                    let _ = ShowWindow(hwnd, SW_SHOW);
-
-                    // Standard message loop to keep window responsive
-                    let mut msg = MSG::default();
-                    while GetMessageW(&mut msg, None, 0, 0).as_bool() {
-                        if !IS_OVERLAY_ACTIVE.load(Ordering::SeqCst) {
-                            break;
-                        }
-                        let _ = DispatchMessageW(&msg);
+            if hwnd.0 != 0 {
+                {
+                    if let Ok(mut handle_guard) = H_OVERLAY_WINDOW.lock() {
+                        *handle_guard = Some(hwnd);
                     }
                 }
-                Err(e) => {
-                    IS_OVERLAY_ACTIVE.store(false, Ordering::SeqCst);
-                    println!("Failed to create overlay window: {:?}", e);
+
+                // Force Topmost status explicitly
+                let _ = windows::Win32::UI::WindowsAndMessaging::SetWindowPos(
+                    hwnd,
+                    HWND_TOPMOST,
+                    x,
+                    y,
+                    width,
+                    height,
+                    windows::Win32::UI::WindowsAndMessaging::SET_WINDOW_POS_FLAGS(0),
+                );
+
+                let _ = ShowWindow(hwnd, SW_SHOW);
+
+                // Standard message loop to keep window responsive
+                let mut msg = MSG::default();
+                while GetMessageW(&mut msg, None, 0, 0).as_bool() {
+                    if !IS_OVERLAY_ACTIVE.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    let _ = DispatchMessageW(&msg);
                 }
+            } else {
+                IS_OVERLAY_ACTIVE.store(false, Ordering::SeqCst);
+                println!("Failed to create overlay window.");
             }
         }
     });

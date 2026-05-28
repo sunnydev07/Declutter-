@@ -2,7 +2,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::windows::named_pipe::ServerOptions;
 use std::sync::atomic::Ordering;
 
-use crate::ipc::protocol::{IpcMessage, StartLockRequest};
+use crate::ipc::protocol::IpcMessage;
 use crate::session;
 
 const PIPE_NAME: &str = r"\\.\pipe\declutter_ipc";
@@ -105,13 +105,16 @@ fn process_message(msg: IpcMessage) -> IpcMessage {
                 req.lock_mode,
                 req.blocklist,
                 req.whitelist,
+                req.website_blocklist,
+                req.is_sword_mode,
             ) {
                 Ok(()) => IpcMessage::Ack,
                 Err(e) => IpcMessage::Error(e),
             }
         }
         IpcMessage::StopLock => {
-            match session::end_session() {
+            // force=false: respects Sword Mode guard inside end_session.
+            match session::end_session(false) {
                 Ok(()) => IpcMessage::Ack,
                 Err(e) => IpcMessage::Error(e),
             }
@@ -119,12 +122,14 @@ fn process_message(msg: IpcMessage) -> IpcMessage {
         IpcMessage::GetStatus => {
             let is_locked = session::IS_ACTIVE.load(Ordering::SeqCst);
             let remaining = session::SECONDS_REMAINING.load(Ordering::SeqCst);
+            let is_sword_mode = session::IS_SWORD_MODE.load(Ordering::SeqCst);
 
             IpcMessage::Status(crate::ipc::protocol::LockStatus {
                 is_locked,
                 remaining_seconds: remaining,
                 current_mode: None, // Could be extended to read ACTIVE_MODE
                 active_session_id: None,
+                is_sword_mode,
             })
         }
         // Ack, Error, Status are client-bound messages; ignore if received.

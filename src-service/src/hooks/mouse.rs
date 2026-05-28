@@ -1,7 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, HHOOK, WH_MOUSE_LL, MSLLHOOKSTRUCT, WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_RBUTTONDOWN
+    CallNextHookEx, HHOOK, WH_MOUSE_LL, WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_RBUTTONDOWN
 };
 
 // Controls if mouse input should be blocked
@@ -40,7 +40,7 @@ pub unsafe extern "system" fn low_level_mouse_proc(
 
 pub fn install_mouse_hook() -> Result<(), String> {
     unsafe {
-        if H_MOUSE_HOOK.is_some() {
+        if let Some(_) = H_MOUSE_HOOK {
             return Ok(());
         }
 

@@ -20,6 +20,9 @@ struct StartLockRequest {
     blocklist: Vec<String>,
     whitelist: Vec<String>,
     emergency_method: String,
+    website_blocklist: Vec<String>,
+    #[serde(default)]
+    is_sword_mode: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -100,6 +103,9 @@ async fn start_lock_session(
     blocklist: Vec<String>,
     whitelist: Vec<String>,
     emergency_method: String,
+    website_blocklist: Vec<String>,
+    #[allow(non_snake_case)]
+    is_sword_mode: Option<bool>,
 ) -> Result<(), String> {
     let mode = parse_lock_mode(&lock_mode)?;
 
@@ -109,6 +115,8 @@ async fn start_lock_session(
         blocklist,
         whitelist,
         emergency_method,
+        website_blocklist,
+        is_sword_mode: is_sword_mode.unwrap_or(false),
     });
 
     // Run blocking pipe I/O on Tokio's blocking pool.
@@ -155,6 +163,121 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+fn get_running_processes() -> Vec<String> {
+    use sysinfo::System;
+
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let critical_processes = [
+        "system",
+        "registry",
+        "smss.exe",
+        "csrss.exe",
+        "wininit.exe",
+        "services.exe",
+        "lsass.exe",
+        "svchost.exe",
+        "fontdrvhost.exe",
+        "spoolsv.exe",
+        "taskhostw.exe",
+        "runtimebroker.exe",
+        "searchhost.exe",
+        "shellexperiencehost.exe",
+        "ctfmon.exe",
+        "conhost.exe",
+        "applicationframehost.exe",
+        "winlogon.exe",
+        "dwm.exe",
+    ];
+
+    let mut processes: Vec<String> = sys
+        .processes()
+        .values()
+        .filter_map(|proc| {
+            let name = proc.name();
+            if name.is_empty() {
+                return None;
+            }
+            
+            let mut name_str = name.to_string();
+            // standardise Windows executables
+            if !name_str.to_lowercase().ends_with(".exe") && name_str.to_lowercase() != "system" && name_str.to_lowercase() != "registry" {
+                name_str.push_str(".exe");
+            }
+            
+            let lower_name = name_str.to_lowercase();
+            if critical_processes.iter().any(|&crit| crit == lower_name) {
+                None
+            } else {
+                Some(name_str)
+            }
+        })
+        .collect();
+
+    processes.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    processes.dedup_by(|a, b| a.to_lowercase() == b.to_lowercase());
+    processes
+}
+
+#[tauri::command]
+async fn emergency_system_repair() -> Result<(), String> {
+    // 1. Try to stop any active lock session via the service IPC pipe (best-effort).
+    let msg = IpcMessage::StopLock;
+    let _ = tokio::task::spawn_blocking(move || send_ipc_message(&msg)).await;
+
+    // 2. Perform direct registry cleanup using the winreg crate.
+    // This is run outside the pipe server context so it works even if the service is dead.
+    tokio::task::spawn_blocking(move || {
+        use winreg::enums::*;
+        use winreg::RegKey;
+
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+
+        // A. Repair Task Manager & Registry tools policies
+        if let Ok((system_key, _)) = hkcu.create_subkey(r"Software\Microsoft\Windows\CurrentVersion\Policies\System") {
+            let _ = system_key.set_value("DisableTaskMgr", &0u32);
+            let _ = system_key.set_value("DisableRegistryTools", &0u32);
+        }
+
+        // B. Repair CMD/Shell policies
+        if let Ok((cmd_key, _)) = hkcu.create_subkey(r"Software\Policies\Microsoft\Windows\System") {
+            let _ = cmd_key.set_value("DisableCMD", &0u32);
+        }
+
+        // C. Clear the hosts file (best-effort)
+        const HOSTS_FILE_PATH: &str = r"C:\Windows\System32\drivers\etc\hosts";
+        const DECLUTTER_HOSTS_MARKER: &str = "# --- DECLUTTER BLOCKED SITES ---";
+
+        if let Ok(current_content) = std::fs::read_to_string(HOSTS_FILE_PATH) {
+            if current_content.contains(DECLUTTER_HOSTS_MARKER) {
+                let mut new_content = String::new();
+                let mut in_block = false;
+
+                for line in current_content.lines() {
+                    if line.trim() == DECLUTTER_HOSTS_MARKER {
+                        in_block = !in_block;
+                        continue;
+                    }
+
+                    if !in_block {
+                        new_content.push_str(line);
+                        new_content.push('\n');
+                    }
+                }
+
+                let new_content = new_content.trim_end().to_string() + "\n";
+                let _ = std::fs::write(HOSTS_FILE_PATH, new_content);
+            }
+        }
+
+        Ok::<(), String>(())
+    })
+    .await
+    .map_err(|e| format!("Join error: {e}"))?
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -167,9 +290,11 @@ pub fn run() {
         ))
         .invoke_handler(tauri::generate_handler![
             greet,
+            get_running_processes,
             start_lock_session,
             stop_lock_session,
-            get_lock_status
+            get_lock_status,
+            emergency_system_repair
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

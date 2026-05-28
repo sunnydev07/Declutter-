@@ -73,13 +73,20 @@ export const useSession = () => {
       .filter((r) => r.ruleType === 'allow')
       .map((r) => r.exePath || r.appName);
 
-    // 2. Fetch the user's emergency unlock method
+    // 2. Build website blocklist from the user's web rules
+    const webRules = db.getWebRules();
+    const websiteBlocklist = webRules
+      .filter((r) => r.ruleType === 'block')
+      .map((r) => r.domain);
+
+    // 3. Fetch the user's emergency unlock method
     const settings = db.getSettings();
     const emergencyMethod = settings.emergencyUnlockMethod || 'string';
 
-    // 3. Ask the Tauri shell to relay StartLock to the Windows Service (best-effort).
+    // 4. Ask the Tauri shell to relay StartLock to the Windows Service (best-effort).
     //    If the service or Tauri runtime isn't available (e.g. running via npm run dev),
     //    we log a warning and proceed with the local-only session.
+    const isSwordMode = plantType === 'sword';
     try {
       await invoke('start_lock_session', {
         durationMinutes,
@@ -87,6 +94,8 @@ export const useSession = () => {
         blocklist,
         whitelist,
         emergencyMethod,
+        websiteBlocklist,
+        isSwordMode,
       });
     } catch (err: any) {
       console.warn('[useSession] Service IPC unavailable — running local-only session:', err);
@@ -169,6 +178,14 @@ export const useSession = () => {
 
   const forceUnlock = async () => {
     if (!activeSession) return;
+
+    // Sword Mode: no manual escape is permitted — not even from the frontend.
+    // The service will also reject the IPC stop request, so this is a belt-and-suspenders guard.
+    if (activeSession.plantType === 'sword') {
+      console.warn('[useSession] forceUnlock blocked — Sword Mode is active.');
+      notify('The Sword binds you.', 'No escape. Hold the line until the timer expires.');
+      return;
+    }
 
     // Tell the Windows Service to release all OS restrictions
     try {

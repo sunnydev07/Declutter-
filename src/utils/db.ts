@@ -1,4 +1,4 @@
-import { FocusSession, DailyStats, AppRule, UserSettings } from '../types/session';
+import { FocusSession, DailyStats, AppRule, WebRule, UserSettings } from '../types/session';
 
 // Helper to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -30,6 +30,7 @@ const KEYS = {
   SETTINGS: 'declutter_settings',
   SESSIONS: 'declutter_sessions',
   APP_RULES: 'declutter_app_rules',
+  WEB_RULES: 'declutter_web_rules',
   STATS: 'declutter_stats',
 };
 
@@ -49,6 +50,16 @@ const initDb = () => {
       { id: '3', appName: 'Chrome', exePath: 'chrome.exe', ruleType: 'allow', createdAt: new Date().toISOString() }, // Whitelisted
     ];
     localStorage.setItem(KEYS.APP_RULES, JSON.stringify(defaultRules));
+  }
+  if (!localStorage.getItem(KEYS.WEB_RULES)) {
+    // Some default distracting sites to block
+    const defaultWebRules: WebRule[] = [
+      { id: '1', domain: 'youtube.com', ruleType: 'block', createdAt: new Date().toISOString() },
+      { id: '2', domain: 'facebook.com', ruleType: 'block', createdAt: new Date().toISOString() },
+      { id: '3', domain: 'twitter.com', ruleType: 'block', createdAt: new Date().toISOString() },
+      { id: '4', domain: 'reddit.com', ruleType: 'block', createdAt: new Date().toISOString() },
+    ];
+    localStorage.setItem(KEYS.WEB_RULES, JSON.stringify(defaultWebRules));
   }
   if (!localStorage.getItem(KEYS.STATS)) {
     localStorage.setItem(KEYS.STATS, JSON.stringify({}));
@@ -130,6 +141,31 @@ export const db = {
     const rules = this.getAppRules();
     const updated = rules.filter((r) => r.id !== id);
     localStorage.setItem(KEYS.APP_RULES, JSON.stringify(updated));
+  },
+
+  // --- Web Rules ---
+  getWebRules(): WebRule[] {
+    const rules = localStorage.getItem(KEYS.WEB_RULES);
+    return rules ? JSON.parse(rules) : [];
+  },
+
+  addWebRule(domain: string, ruleType: 'block' | 'allow'): WebRule {
+    const rules = this.getWebRules();
+    const newRule: WebRule = {
+      id: generateId(),
+      domain: domain.trim().toLowerCase(),
+      ruleType,
+      createdAt: new Date().toISOString(),
+    };
+    rules.push(newRule);
+    localStorage.setItem(KEYS.WEB_RULES, JSON.stringify(rules));
+    return newRule;
+  },
+
+  deleteWebRule(id: string): void {
+    const rules = this.getWebRules();
+    const updated = rules.filter((r) => r.id !== id);
+    localStorage.setItem(KEYS.WEB_RULES, JSON.stringify(updated));
   },
 
   // --- Statistics & Aggregations ---

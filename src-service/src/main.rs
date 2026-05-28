@@ -32,7 +32,7 @@ fn run_service(_arguments: Vec<OsString>) -> windows_service::Result<()> {
     let status_handle = service_control_handler::register(SERVICE_NAME, move |control_event| {
         match control_event {
             ServiceControl::Stop => {
-                let _ = end_session();
+                let _ = end_session(true);
                 std::process::exit(0);
             }
             ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,

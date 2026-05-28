@@ -1,6 +1,8 @@
 export type LockMode = 'soft' | 'app' | 'view' | 'full';
 export type CoachPersona = 'male' | 'female';
 export type CoachAiMode = 'off' | 'gemini_optional';
+/** Known plant seeds. The 'sword' value activates Sword Mode — no manual escape. */
+export type PlantType = 'oak' | 'cherry' | 'cactus' | 'crystal' | 'dragon' | 'sword' | (string & {});
 
 export interface FocusSession {
   id: string;
@@ -12,7 +14,7 @@ export interface FocusSession {
   status: 'completed' | 'failed' | 'emergency_unlocked' | 'paused';
   category?: string;
   notes?: string;
-  plantType?: string;
+  plantType?: PlantType;
   plantSurvived?: boolean;
 }
 
@@ -30,6 +32,13 @@ export interface AppRule {
   id: string;
   appName: string;
   exePath?: string;
+  ruleType: 'block' | 'allow';
+  createdAt: string;
+}
+
+export interface WebRule {
+  id: string;
+  domain: string;
   ruleType: 'block' | 'allow';
   createdAt: string;
 }

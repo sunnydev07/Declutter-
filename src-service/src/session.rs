@@ -18,6 +18,8 @@ use crate::ipc::protocol::LockMode;
 
 pub static IS_ACTIVE: AtomicBool = AtomicBool::new(false);
 pub static SECONDS_REMAINING: AtomicU32 = AtomicU32::new(0);
+/// When true, `end_session(force: false)` is rejected so only natural expiry can end the lock.
+pub static IS_SWORD_MODE: AtomicBool = AtomicBool::new(false);
 
 static ACTIVE_MODE: Lazy<Mutex<Option<LockMode>>> = Lazy::new(|| Mutex::new(None));
 
@@ -93,6 +95,8 @@ pub fn start_session(
     lock_mode: LockMode,
     blocklist: Vec<String>,
     whitelist: Vec<String>,
+    website_blocklist: Vec<String>,
+    is_sword_mode: bool,
 ) -> Result<(), String> {
     if IS_ACTIVE.load(Ordering::SeqCst) {
         return Err("A focus session is already active!".to_string());
@@ -100,6 +104,7 @@ pub fn start_session(
 
     IS_ACTIVE.store(true, Ordering::SeqCst);
     SECONDS_REMAINING.store(duration_minutes * 60, Ordering::SeqCst);
+    IS_SWORD_MODE.store(is_sword_mode, Ordering::SeqCst);
     
     save_state(duration_minutes * 60, &lock_mode);
 
@@ -113,26 +118,17 @@ pub fn start_session(
     update_process_lists(blocklist, whitelist);
 
     // 2. Engage lock levels depending on selected intensity
-    let distracting_sites = vec![
-        "youtube.com".to_string(),
-        "reddit.com".to_string(),
-        "twitter.com".to_string(),
-        "facebook.com".to_string(),
-        "instagram.com".to_string(),
-        "tiktok.com".to_string(),
-    ];
-
     match lock_mode {
         LockMode::Soft => {}
         LockMode::App => {
             start_process_monitor();
-            let _ = block_websites(&distracting_sites);
+            let _ = block_websites(&website_blocklist);
         }
         LockMode::View => {
             IS_KEYBOARD_LOCKED.store(true, Ordering::SeqCst);
             let _ = install_keyboard_hook();
             start_process_monitor();
-            let _ = block_websites(&distracting_sites);
+            let _ = block_websites(&website_blocklist);
         }
         LockMode::Full => {
             IS_KEYBOARD_LOCKED.store(true, Ordering::SeqCst);
@@ -145,7 +141,7 @@ pub fn start_session(
             let _ = set_cmd_disabled(true);
             
             start_process_monitor();
-            let _ = block_websites(&distracting_sites);
+            let _ = block_websites(&website_blocklist);
         }
     }
 
@@ -154,7 +150,8 @@ pub fn start_session(
         while IS_ACTIVE.load(Ordering::SeqCst) {
             let rem = SECONDS_REMAINING.load(Ordering::SeqCst);
             if rem == 0 {
-                let _ = end_session();
+                // force=true: natural expiry always succeeds, even in Sword Mode.
+                let _ = end_session(true);
                 break;
             }
             SECONDS_REMAINING.store(rem - 1, Ordering::SeqCst);
@@ -165,9 +162,14 @@ pub fn start_session(
     Ok(())
 }
 
-pub fn end_session() -> Result<(), String> {
+pub fn end_session(force: bool) -> Result<(), String> {
     if !IS_ACTIVE.load(Ordering::SeqCst) {
         return Ok(());
+    }
+
+    // Sword Mode guard: reject manual stop requests; only forced (timer-expiry) calls proceed.
+    if IS_SWORD_MODE.load(Ordering::SeqCst) && !force {
+        return Err("Cannot manually unlock. The Sword is planted.".to_string());
     }
 
     IS_ACTIVE.store(false, Ordering::SeqCst);

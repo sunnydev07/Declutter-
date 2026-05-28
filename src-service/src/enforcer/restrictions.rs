@@ -2,7 +2,12 @@ use windows::Win32::System::Registry::{
     RegCreateKeyExW, RegSetValueExW, RegDeleteValueW, RegCloseKey,
     HKEY_CURRENT_USER, REG_DWORD, REG_OPTION_NON_VOLATILE, KEY_WRITE,
 };
+use windows::Win32::Foundation::{ERROR_FILE_NOT_FOUND, WIN32_ERROR};
 use windows::core::w;
+
+fn is_missing_registry_value(error: &windows::core::Error) -> bool {
+    WIN32_ERROR::from_error(error) == Some(ERROR_FILE_NOT_FOUND)
+}
 
 // Safely sets registry value to disable/enable Task Manager
 pub fn set_task_manager_disabled(disabled: bool) -> Result<(), String> {
@@ -43,8 +48,10 @@ pub fn set_task_manager_disabled(disabled: bool) -> Result<(), String> {
                 let delete_result = RegDeleteValueW(h_key, w!("DisableTaskMgr"));
                 let _ = RegCloseKey(h_key);
                 // Ignored if it doesn't exist, which is fine
-                if delete_result.is_err() && delete_result.0 != 2 { // 2 = ERROR_FILE_NOT_FOUND
-                    return Err("Failed to delete DisableTaskMgr registry value".to_string());
+                if let Err(error) = delete_result {
+                    if !is_missing_registry_value(&error) {
+                        return Err("Failed to delete DisableTaskMgr registry value".to_string());
+                    }
                 }
             }
             Ok(())
@@ -92,8 +99,10 @@ pub fn set_cmd_disabled(disabled: bool) -> Result<(), String> {
             } else {
                 let delete_result = RegDeleteValueW(h_key, w!("DisableCMD"));
                 let _ = RegCloseKey(h_key);
-                if delete_result.is_err() && delete_result.0 != 2 {
-                    return Err("Failed to delete DisableCMD registry value".to_string());
+                if let Err(error) = delete_result {
+                    if !is_missing_registry_value(&error) {
+                        return Err("Failed to delete DisableCMD registry value".to_string());
+                    }
                 }
             }
             Ok(())
