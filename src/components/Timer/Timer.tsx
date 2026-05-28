@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSession } from '../../hooks/useSession';
+import { useSettings } from '../../hooks/useSettings';
 import { LockMode } from '../../types/session';
 import LockScreen from '../LockScreen/LockScreen';
 import PlantSelector from '../Gamification/PlantSelector';
@@ -17,11 +18,13 @@ const Timer: React.FC = () => {
     resumeSession,
     forceUnlock,
   } = useSession();
+  const { settings } = useSettings();
 
   const [duration, setDuration] = useState(25);
   const [lockMode, setLockMode] = useState<LockMode>('soft');
   const [category, setCategory] = useState('General Study');
   const [selectedPlantId, setSelectedPlantId] = useState('oak');
+  const [quitRequestId, setQuitRequestId] = useState(0);
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -33,8 +36,13 @@ const Timer: React.FC = () => {
     startSession(duration, lockMode, category, selectedPlantId);
   };
 
+  const requestQuit = () => {
+    setQuitRequestId((requestId) => requestId + 1);
+  };
+
   // Calculate circular SVG progress ring offset
-  const plannedSeconds = duration * 60;
+  const activePlantId = activeSession?.plantType ?? selectedPlantId;
+  const plannedSeconds = activeSession ? activeSession.plannedDurationMinutes * 60 : duration * 60;
   const progressRatio = activeSession ? remainingSeconds / plannedSeconds : 1;
   const strokeDashoffset = 880 * (1 - progressRatio); // 880 is the circumference (2 * pi * 140)
 
@@ -45,8 +53,15 @@ const Timer: React.FC = () => {
         <LockScreen
           remainingSeconds={remainingSeconds}
           lockMode={activeSession.lockMode}
-          plantType={selectedPlantId}
-          allowEmergencyUnlock={selectedPlantId !== 'sword'}
+          plantType={activePlantId}
+          sessionId={activeSession.id}
+          plannedDurationMinutes={activeSession.plannedDurationMinutes}
+          category={activeSession.category}
+          coachPersona={settings.coachPersona}
+          coachAiMode={settings.coachAiMode}
+          coachGeminiApiKey={settings.coachGeminiApiKey}
+          allowEmergencyUnlock={activePlantId !== 'sword'}
+          quitRequestId={quitRequestId}
           onUnlock={forceUnlock}
         />
       )}
@@ -98,7 +113,7 @@ const Timer: React.FC = () => {
               </button>
             ) : (
               <div className="flex-center gap-md" style={{ width: '100%' }}>
-                {selectedPlantId !== 'sword' && (
+                {activePlantId !== 'sword' && (
                   isPaused ? (
                     <button className="btn btn-primary flex-1" onClick={resumeSession}>
                       ▶️ Resume Study
@@ -109,12 +124,12 @@ const Timer: React.FC = () => {
                     </button>
                   )
                 )}
-                {selectedPlantId !== 'sword' && (
-                  <button className="btn btn-secondary btn-danger-glow flex-1" onClick={forceUnlock}>
+                {activePlantId !== 'sword' && (
+                  <button className="btn btn-secondary btn-danger-glow flex-1" onClick={requestQuit}>
                     🛑 Quit Focus
                   </button>
                 )}
-                {selectedPlantId === 'sword' && (
+                {activePlantId === 'sword' && (
                   <div className="sword-active-tag">⚔️ Sword Mode — No Exit</div>
                 )}
               </div>

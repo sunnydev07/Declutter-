@@ -14,8 +14,8 @@ export const useSession = () => {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [streakCount, setStreakCount] = useState(5); // Simulated default, will load dynamically
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [streakCount] = useState(5); // Simulated default, will load dynamically
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Sync state on launch
   useEffect(() => {

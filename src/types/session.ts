@@ -1,4 +1,6 @@
 export type LockMode = 'soft' | 'app' | 'view' | 'full';
+export type CoachPersona = 'male' | 'female';
+export type CoachAiMode = 'off' | 'gemini_optional';
 
 export interface FocusSession {
   id: string;
@@ -36,6 +38,9 @@ export interface UserSettings {
   defaultLockMode: LockMode;
   emergencyUnlockMethod: 'string' | 'password' | 'cooldown';
   emergencyUnlockPenalty: 'lose_plant' | 'lose_streak' | 'time_penalty';
+  coachPersona: CoachPersona;
+  coachAiMode: CoachAiMode;
+  coachGeminiApiKey?: string;
   allowPausing: boolean;
   maxPausesPerSession: number;
   theme: 'dark' | 'light' | 'auto';

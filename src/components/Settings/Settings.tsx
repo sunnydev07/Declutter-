@@ -1,5 +1,5 @@
 import { useSettings } from '../../hooks/useSettings';
-import { LockMode } from '../../types/session';
+import { CoachAiMode, CoachPersona, LockMode } from '../../types/session';
 import './Settings.css';
 
 const ACCENT_COLORS = [
@@ -94,6 +94,68 @@ const Settings = () => {
                 />
                 <span className="slider"></span>
               </label>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Coach Agent */}
+      <section className="settings-section">
+        <h3>Coach Agent</h3>
+        <div className="settings-grid">
+          
+          <div className="glass-card setting-card coach-agent-card">
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Default Coach Persona</span>
+                <span className="setting-desc">Voice used before an emergency unlock is revealed.</span>
+              </div>
+              <select
+                className="setting-select"
+                value={settings.coachPersona}
+                onChange={(e) => updateSettings({ coachPersona: e.target.value as CoachPersona })}
+              >
+                <option value="male">Ares</option>
+                <option value="female">Athena</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="glass-card setting-card coach-agent-card">
+            <div className="setting-row">
+              <div className="setting-label">
+                <span className="setting-title">Gemini Personalization</span>
+                <span className="setting-desc">Optional copy variation with local fallback.</span>
+              </div>
+              <label className="switch" title="Toggle Gemini personalization">
+                <input
+                  type="checkbox"
+                  checked={settings.coachAiMode === 'gemini_optional'}
+                  onChange={(e) => updateSettings({
+                    coachAiMode: (e.target.checked ? 'gemini_optional' : 'off') as CoachAiMode,
+                  })}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div className="glass-card setting-card coach-key-card">
+            <div className="setting-row coach-key-row">
+              <div className="setting-label">
+                <span className="setting-title">Gemini API Key</span>
+                <span className="setting-desc">Stored locally in Declutter settings.</span>
+              </div>
+              <input
+                type="password"
+                className="setting-input coach-key-input"
+                value={settings.coachGeminiApiKey ?? ''}
+                onChange={(e) => updateSettings({ coachGeminiApiKey: e.target.value })}
+                placeholder="AIza..."
+                autoComplete="off"
+                spellCheck={false}
+              />
             </div>
           </div>
 

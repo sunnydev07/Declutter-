@@ -4,7 +4,7 @@ import { db } from '../../utils/db';
 import './Dashboard.css';
 
 const Dashboard: React.FC = () => {
-  const { totalMinutes, sessionsCompleted, plantsGrown } = useStats();
+  const { totalMinutes, sessionsCompleted } = useStats();
 
   const sessions = db.getSessions();
   const failedCount = sessions.filter((s) => s.status === 'failed' || s.status === 'emergency_unlocked').length;

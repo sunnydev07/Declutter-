@@ -1,4 +1,4 @@
-import { FocusSession, DailyStats, AppRule, UserSettings, LockMode } from '../types/session';
+import { FocusSession, DailyStats, AppRule, UserSettings } from '../types/session';
 
 // Helper to generate unique IDs
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -8,6 +8,9 @@ const DEFAULT_SETTINGS: UserSettings = {
   defaultLockMode: 'soft',
   emergencyUnlockMethod: 'string',
   emergencyUnlockPenalty: 'lose_plant',
+  coachPersona: 'male',
+  coachAiMode: 'off',
+  coachGeminiApiKey: '',
   allowPausing: true,
   maxPausesPerSession: 2,
   theme: 'dark',
@@ -16,6 +19,11 @@ const DEFAULT_SETTINGS: UserSettings = {
   startMinimized: false,
   dailyGoalMinutes: 60,
 };
+
+const mergeSettings = (settings: Partial<UserSettings> = {}): UserSettings => ({
+  ...DEFAULT_SETTINGS,
+  ...settings,
+});
 
 // Database Key Constants
 const KEYS = {
@@ -54,7 +62,22 @@ export const db = {
   // --- Settings ---
   getSettings(): UserSettings {
     const settings = localStorage.getItem(KEYS.SETTINGS);
-    return settings ? JSON.parse(settings) : DEFAULT_SETTINGS;
+    if (!settings) return DEFAULT_SETTINGS;
+
+    try {
+      const parsed = JSON.parse(settings) as Partial<UserSettings>;
+      const merged = mergeSettings(parsed);
+      const serialized = JSON.stringify(merged);
+
+      if (serialized !== settings) {
+        localStorage.setItem(KEYS.SETTINGS, serialized);
+      }
+
+      return merged;
+    } catch {
+      localStorage.setItem(KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
+      return DEFAULT_SETTINGS;
+    }
   },
 
   saveSettings(settings: UserSettings): void {
