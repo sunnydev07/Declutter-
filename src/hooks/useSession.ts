@@ -10,6 +10,7 @@ import {
 } from '../utils/sounds';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 export const useSession = () => {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
@@ -17,24 +18,27 @@ export const useSession = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [streakCount] = useState(5); // Simulated default, will load dynamically
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fullLockFocusRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Sync state on launch
   useEffect(() => {
     const sessions = db.getSessions();
-    const active = sessions.find((s) => s.status === 'completed' || s.status === 'failed' ? false : s.endedAt === undefined);
-    
+    const active = sessions.find((s) =>
+      s.status === 'completed' || s.status === 'failed' ? false : s.endedAt === undefined
+    );
+
     // Check if there was an interrupted session (e.g. app closed)
     if (active) {
       const elapsed = Math.floor((Date.now() - new Date(active.startedAt).getTime()) / 1000);
       const plannedSecs = active.plannedDurationMinutes * 60;
-      
+
       if (elapsed < plannedSecs) {
         setActiveSession(active);
         setRemainingSeconds(plannedSecs - elapsed);
         setIsPaused(false);
         playAmbientNoise('rain'); // Default resume ambient
       } else {
-        // Interrupted session finished while app was closed! Auto-complete it
+        // Interrupted session finished while app was closed; auto-complete it.
         active.status = 'completed';
         active.endedAt = new Date().toISOString();
         db.saveSession(active);
@@ -49,7 +53,6 @@ export const useSession = () => {
         setRemainingSeconds((prev) => {
           if (prev <= 1) {
             clearInterval(timerRef.current!);
-            // Fire async completion — errors are handled internally via try/catch
             void completeSession();
             return 0;
           }
@@ -63,8 +66,12 @@ export const useSession = () => {
     };
   }, [activeSession, remainingSeconds, isPaused]);
 
-  const startSession = async (durationMinutes: number, lockMode: LockMode, category = 'General Study', plantType = 'oak') => {
-    // 1. Build blocklist/whitelist from the user's app rules
+  const startSession = async (
+    durationMinutes: number,
+    lockMode: LockMode,
+    category = 'General Study',
+    plantType = 'oak'
+  ) => {
     const appRules = db.getAppRules();
     const blocklist = appRules
       .filter((r) => r.ruleType === 'block')
@@ -73,41 +80,80 @@ export const useSession = () => {
       .filter((r) => r.ruleType === 'allow')
       .map((r) => r.exePath || r.appName);
 
-    // 2. Build website blocklist from the user's web rules
     const webRules = db.getWebRules();
     const websiteBlocklist = webRules
       .filter((r) => r.ruleType === 'block')
       .map((r) => r.domain);
 
-    // 3. Fetch the user's emergency unlock method
     const settings = db.getSettings();
     const emergencyMethod = settings.emergencyUnlockMethod || 'string';
-
-    // 4. Ask the Tauri shell to relay StartLock to the Windows Service (best-effort).
-    //    If the service or Tauri runtime isn't available (e.g. running via npm run dev),
-    //    we log a warning and proceed with the local-only session.
     const isSwordMode = plantType === 'sword';
-    try {
-      await invoke('start_lock_session', {
-        durationMinutes,
-        lockMode,       // Tauri command will parse the string to the enum
-        blocklist,
-        whitelist,
-        emergencyMethod,
-        websiteBlocklist,
-        isSwordMode,
-      });
-    } catch (err: any) {
-      console.warn('[useSession] Service IPC unavailable — running local-only session:', err);
+
+    const activateFullLockWindow = async () => {
+      const appWindow = getCurrentWindow();
+
+      await appWindow.show();
+      await appWindow.unminimize();
+      await appWindow.setResizable(false);
+      await appWindow.setMaximizable(false);
+      await appWindow.setMinimizable(false);
+      await appWindow.setClosable(false);
+      await appWindow.setAlwaysOnTop(true);
+      await appWindow.setFullscreen(true);
+      await appWindow.setFocus();
+
+      if (fullLockFocusRef.current) {
+        clearInterval(fullLockFocusRef.current);
+      }
+
+      fullLockFocusRef.current = setInterval(() => {
+        const currentWindow = getCurrentWindow();
+        void currentWindow.show();
+        void currentWindow.unminimize();
+        void currentWindow.setAlwaysOnTop(true);
+        void currentWindow.setFullscreen(true);
+        void currentWindow.setFocus();
+      }, 750);
+    };
+
+    // Non-soft locks must not fall back to a fake local-only timer.
+    if (lockMode !== 'soft') {
+      try {
+        await invoke('start_lock_session', {
+          durationMinutes,
+          lockMode,
+          blocklist,
+          whitelist,
+          emergencyMethod,
+          websiteBlocklist,
+          isSwordMode,
+        });
+      } catch (err: any) {
+        const details = typeof err === 'string' ? err : err?.message || String(err);
+        throw new Error(`Declutter service could not start enforcement: ${details}`);
+      }
+
+      if (lockMode === 'full') {
+        try {
+          await activateFullLockWindow();
+        } catch (windowErr: any) {
+          try {
+            await invoke('stop_lock_session');
+          } catch (stopErr) {
+            console.error('[useSession] Failed to stop service after Full Lock window setup failed:', stopErr);
+          }
+          const details = typeof windowErr === 'string' ? windowErr : windowErr?.message || String(windowErr);
+          throw new Error(`Declutter window could not enter Full Lock kiosk mode: ${details}`);
+        }
+      }
     }
 
-    // 4. Persist the session locally and start the UI timer
     const newSession: FocusSession = {
       id: Math.random().toString(36).substring(2, 9),
       startedAt: new Date().toISOString(),
       plannedDurationMinutes: durationMinutes,
       lockMode,
-      status: 'paused', // Active/Running under mock state
+      status: 'paused', // Active/running under the current local session model
       category,
       plantType,
     };
@@ -116,8 +162,7 @@ export const useSession = () => {
     setActiveSession(newSession);
     setRemainingSeconds(durationMinutes * 60);
     setIsPaused(false);
-    
-    // Start ambient background noise based on some setting, defaults to rain
+
     playAmbientNoise('rain');
   };
 
@@ -137,8 +182,8 @@ export const useSession = () => {
       if (permissionGranted) {
         sendNotification({ title, body });
       }
-    } catch (e) {
-      console.warn("Notifications not supported in this environment");
+    } catch {
+      console.warn('Notifications not supported in this environment');
     }
   };
 
@@ -147,16 +192,39 @@ export const useSession = () => {
     setIsPaused(false);
   };
 
-  const completeSession = async () => {
-    if (!activeSession) return;
+  const stopServiceLock = async () => {
+    if (!activeSession || activeSession.lockMode === 'soft') return;
 
-    // Tell the Windows Service to release all OS restrictions
+    if (fullLockFocusRef.current) {
+      clearInterval(fullLockFocusRef.current);
+      fullLockFocusRef.current = null;
+    }
+
     try {
       await invoke('stop_lock_session');
     } catch (err) {
       console.error('[useSession] Service stop_lock_session failed:', err);
-      // Still proceed to clear local state – we don't want to leave the UI stuck.
     }
+
+    if (activeSession.lockMode === 'full') {
+      try {
+        const appWindow = getCurrentWindow();
+        await appWindow.setFullscreen(false);
+        await appWindow.setAlwaysOnTop(false);
+        await appWindow.setClosable(true);
+        await appWindow.setMinimizable(true);
+        await appWindow.setMaximizable(true);
+        await appWindow.setResizable(true);
+      } catch (err) {
+        console.error('[useSession] Failed to restore window after Full Lock:', err);
+      }
+    }
+  };
+
+  const completeSession = async () => {
+    if (!activeSession) return;
+
+    await stopServiceLock();
 
     const completed: FocusSession = {
       ...activeSession,
@@ -170,30 +238,23 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
-    
+
     stopAmbientNoise();
     playSessionCompleteChime();
-    notify("Session Complete! 🎉", "You've successfully completed your focus session and grown a new plant.");
+    notify('Session Complete!', "You've successfully completed your focus session and grown a new plant.");
   };
 
   const forceUnlock = async () => {
     if (!activeSession) return;
 
-    // Sword Mode: no manual escape is permitted — not even from the frontend.
-    // The service will also reject the IPC stop request, so this is a belt-and-suspenders guard.
+    // Sword Mode: no manual escape is permitted, not even from the frontend.
     if (activeSession.plantType === 'sword') {
-      console.warn('[useSession] forceUnlock blocked — Sword Mode is active.');
+      console.warn('[useSession] forceUnlock blocked - Sword Mode is active.');
       notify('The Sword binds you.', 'No escape. Hold the line until the timer expires.');
       return;
     }
 
-    // Tell the Windows Service to release all OS restrictions
-    try {
-      await invoke('stop_lock_session');
-    } catch (err) {
-      console.error('[useSession] Service stop_lock_session failed:', err);
-      // Still proceed to clear local state so the user isn't stuck.
-    }
+    await stopServiceLock();
 
     const failed: FocusSession = {
       ...activeSession,
@@ -207,10 +268,10 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
-    
+
     stopAmbientNoise();
     playPlantWiltedChime();
-    notify("Session Failed", "Your plant has wilted because you abandoned your focus session.");
+    notify('Session Failed', 'Your plant has wilted because you abandoned your focus session.');
   };
 
   return {

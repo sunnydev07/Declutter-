@@ -5,7 +5,7 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 
 // Default User Settings
 const DEFAULT_SETTINGS: UserSettings = {
-  defaultLockMode: 'soft',
+  defaultLockMode: 'app',
   emergencyUnlockMethod: 'string',
   emergencyUnlockPenalty: 'lose_plant',
   coachPersona: 'male',
@@ -32,12 +32,30 @@ const KEYS = {
   APP_RULES: 'declutter_app_rules',
   WEB_RULES: 'declutter_web_rules',
   STATS: 'declutter_stats',
+  MIGRATIONS: 'declutter_migrations',
+};
+
+const MIGRATIONS = {
+  DEFAULT_LOCK_MODE_APP: 'default_lock_mode_app_v1',
 };
 
 // Initialize DB structure if not present
 const initDb = () => {
   if (!localStorage.getItem(KEYS.SETTINGS)) {
     localStorage.setItem(KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
+  } else {
+    try {
+      const migrations = JSON.parse(localStorage.getItem(KEYS.MIGRATIONS) || '[]') as string[];
+      const settings = JSON.parse(localStorage.getItem(KEYS.SETTINGS) || '{}') as UserSettings;
+
+      if (!migrations.includes(MIGRATIONS.DEFAULT_LOCK_MODE_APP) && settings.defaultLockMode === 'soft') {
+        localStorage.setItem(KEYS.SETTINGS, JSON.stringify({ ...settings, defaultLockMode: 'app' }));
+        localStorage.setItem(KEYS.MIGRATIONS, JSON.stringify([...migrations, MIGRATIONS.DEFAULT_LOCK_MODE_APP]));
+      }
+    } catch {
+      localStorage.setItem(KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
+      localStorage.setItem(KEYS.MIGRATIONS, JSON.stringify([MIGRATIONS.DEFAULT_LOCK_MODE_APP]));
+    }
   }
   if (!localStorage.getItem(KEYS.SESSIONS)) {
     localStorage.setItem(KEYS.SESSIONS, JSON.stringify([]));
@@ -47,9 +65,29 @@ const initDb = () => {
     const defaultRules: AppRule[] = [
       { id: '1', appName: 'Steam', exePath: 'steam.exe', ruleType: 'block', createdAt: new Date().toISOString() },
       { id: '2', appName: 'Discord', exePath: 'discord.exe', ruleType: 'block', createdAt: new Date().toISOString() },
-      { id: '3', appName: 'Chrome', exePath: 'chrome.exe', ruleType: 'allow', createdAt: new Date().toISOString() }, // Whitelisted
+      { id: '3', appName: 'Chrome', exePath: 'chrome.exe', ruleType: 'block', createdAt: new Date().toISOString() },
     ];
     localStorage.setItem(KEYS.APP_RULES, JSON.stringify(defaultRules));
+  } else {
+    try {
+      const rules = JSON.parse(localStorage.getItem(KEYS.APP_RULES) || '[]') as AppRule[];
+      const migratedRules = rules.map((rule) => {
+        const isLegacyChromeDefault =
+          rule.id === '3' &&
+          rule.appName.toLowerCase() === 'chrome' &&
+          rule.exePath?.toLowerCase() === 'chrome.exe' &&
+          rule.ruleType === 'allow';
+
+        return isLegacyChromeDefault ? { ...rule, ruleType: 'block' as const } : rule;
+      });
+
+      if (JSON.stringify(migratedRules) !== JSON.stringify(rules)) {
+        localStorage.setItem(KEYS.APP_RULES, JSON.stringify(migratedRules));
+      }
+    } catch {
+      localStorage.removeItem(KEYS.APP_RULES);
+      initDb();
+    }
   }
   if (!localStorage.getItem(KEYS.WEB_RULES)) {
     // Some default distracting sites to block

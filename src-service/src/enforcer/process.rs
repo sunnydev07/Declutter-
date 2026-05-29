@@ -15,13 +15,29 @@ pub static IS_MONITOR_ACTIVE: AtomicBool = AtomicBool::new(false);
 
 static BLOCKLIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
 static WHITELIST: Lazy<Mutex<Vec<String>>> = Lazy::new(|| Mutex::new(Vec::new()));
+static PROCESS_MODE: Lazy<Mutex<ProcessEnforcementMode>> =
+    Lazy::new(|| Mutex::new(ProcessEnforcementMode::Blocklist));
 
-pub fn update_process_lists(blocklist: Vec<String>, whitelist: Vec<String>) {
+#[derive(Clone, Copy)]
+pub enum ProcessEnforcementMode {
+    Blocklist,
+    Allowlist,
+    FullLock,
+}
+
+pub fn update_process_lists(
+    blocklist: Vec<String>,
+    whitelist: Vec<String>,
+    mode: ProcessEnforcementMode,
+) {
     if let Ok(mut bl) = BLOCKLIST.lock() {
         *bl = blocklist.iter().map(|s| s.to_lowercase()).collect();
     }
     if let Ok(mut wl) = WHITELIST.lock() {
         *wl = whitelist.iter().map(|s| s.to_lowercase()).collect();
+    }
+    if let Ok(mut mode_guard) = PROCESS_MODE.lock() {
+        *mode_guard = mode;
     }
 }
 
@@ -29,6 +45,50 @@ pub fn update_process_lists(blocklist: Vec<String>, whitelist: Vec<String>) {
 fn wide_char_to_string(wide: &[u16]) -> String {
     let len = wide.iter().take_while(|&&c| c != 0).count();
     String::from_utf16_lossy(&wide[..len])
+}
+
+fn is_protected_process(process_name: &str) -> bool {
+    const PROTECTED_PROCESSES: &[&str] = &[
+        "system",
+        "registry",
+        "smss.exe",
+        "csrss.exe",
+        "wininit.exe",
+        "winlogon.exe",
+        "services.exe",
+        "lsass.exe",
+        "svchost.exe",
+        "fontdrvhost.exe",
+        "spoolsv.exe",
+        "taskhostw.exe",
+        "runtimebroker.exe",
+        "searchhost.exe",
+        "shellexperiencehost.exe",
+        "startmenuexperiencehost.exe",
+        "sihost.exe",
+        "ctfmon.exe",
+        "conhost.exe",
+        "applicationframehost.exe",
+        "textinputhost.exe",
+        "systemsettings.exe",
+        "securityhealthservice.exe",
+        "securityhealthsystray.exe",
+        "wmiprvse.exe",
+        "wudfhost.exe",
+        "audiodg.exe",
+        "dllhost.exe",
+        "msmpeng.exe",
+        "nisrv.exe",
+        "tiworker.exe",
+        "trustedinstaller.exe",
+        "explorer.exe",
+        "declutter.exe",
+        "tauri-app.exe",
+        "declutter-service.exe",
+        "msedgewebview2.exe",
+    ];
+
+    PROTECTED_PROCESSES.contains(&process_name)
 }
 
 // Scans and terminates blocked processes
@@ -46,38 +106,42 @@ fn enforce_processes() {
         if Process32FirstW(snapshot_handle, &mut entry).is_ok() {
             loop {
                 let process_name = wide_char_to_string(&entry.szExeFile).to_lowercase();
-                
+
                 let should_kill = {
-                    let mut kill = false;
-                    
-                    // Always block Task Manager during focus lock
                     if process_name == "taskmgr.exe" {
-                        kill = true;
-                    } else if let Ok(bl) = BLOCKLIST.lock() {
-                        if bl.contains(&process_name) {
-                            kill = true;
-                        }
-                    }
-                    
-                    // Whitelist enforcement (if whitelist is not empty)
-                    if !kill {
-                        if let Ok(wl) = WHITELIST.lock() {
-                            if !wl.is_empty() && !wl.contains(&process_name) {
-                                // Don't kill core Windows components
-                                let is_system_app = process_name == "explorer.exe"
-                                    || process_name == "svchost.exe"
-                                    || process_name == "systemsettings.exe"
-                                    || process_name == "declutter.exe"
-                                    || process_name == "declutter-service.exe";
-                                    
-                                if !is_system_app {
-                                    kill = true;
+                        true
+                    } else {
+                        let mode = PROCESS_MODE
+                            .lock()
+                            .map(|mode| *mode)
+                            .unwrap_or(ProcessEnforcementMode::Blocklist);
+
+                        match mode {
+                            ProcessEnforcementMode::FullLock => !is_protected_process(&process_name),
+                            ProcessEnforcementMode::Blocklist => BLOCKLIST
+                                .lock()
+                                .map(|bl| bl.contains(&process_name))
+                                .unwrap_or(false),
+                            ProcessEnforcementMode::Allowlist => {
+                                if BLOCKLIST
+                                    .lock()
+                                    .map(|bl| bl.contains(&process_name))
+                                    .unwrap_or(false)
+                                {
+                                    true
+                                } else {
+                                    WHITELIST
+                                        .lock()
+                                        .map(|wl| {
+                                            !wl.is_empty()
+                                                && !wl.contains(&process_name)
+                                                && !is_protected_process(&process_name)
+                                        })
+                                        .unwrap_or(false)
                                 }
                             }
                         }
                     }
-                    
-                    kill
                 };
 
                 if should_kill {

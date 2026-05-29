@@ -9,7 +9,9 @@ use once_cell::sync::Lazy;
 
 use crate::hooks::keyboard::{install_keyboard_hook, uninstall_keyboard_hook, IS_KEYBOARD_LOCKED};
 use crate::hooks::mouse::{install_mouse_hook, uninstall_mouse_hook, IS_MOUSE_LOCKED};
-use crate::enforcer::process::{start_process_monitor, stop_process_monitor, update_process_lists};
+use crate::enforcer::process::{
+    start_process_monitor, stop_process_monitor, update_process_lists, ProcessEnforcementMode,
+};
 use crate::enforcer::overlay::{spawn_fullscreen_overlay, close_fullscreen_overlay};
 use crate::enforcer::restrictions::{
     set_task_manager_disabled, set_cmd_disabled, block_websites, unblock_websites
@@ -114,8 +116,13 @@ pub fn start_session(
         }
     }
 
-    // 1. Configure and update process blocking rules
-    update_process_lists(blocklist, whitelist);
+    // 1. Configure and update process blocking rules.
+    let process_mode = match lock_mode {
+        LockMode::View => ProcessEnforcementMode::Allowlist,
+        LockMode::Full => ProcessEnforcementMode::FullLock,
+        LockMode::Soft | LockMode::App => ProcessEnforcementMode::Blocklist,
+    };
+    update_process_lists(blocklist, whitelist, process_mode);
 
     // 2. Engage lock levels depending on selected intensity
     match lock_mode {

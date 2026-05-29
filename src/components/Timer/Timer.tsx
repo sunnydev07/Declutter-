@@ -21,10 +21,12 @@ const Timer: React.FC = () => {
   const { settings } = useSettings();
 
   const [duration, setDuration] = useState(25);
-  const [lockMode, setLockMode] = useState<LockMode>('soft');
+  const [lockMode, setLockMode] = useState<LockMode>(settings.defaultLockMode);
   const [category, setCategory] = useState('General Study');
   const [selectedPlantId, setSelectedPlantId] = useState('oak');
   const [quitRequestId, setQuitRequestId] = useState(0);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState('');
 
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
@@ -32,8 +34,17 @@ const Timer: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${remaining.toString().padStart(2, '0')}`;
   };
 
-  const handleStart = () => {
-    startSession(duration, lockMode, category, selectedPlantId);
+  const handleStart = async () => {
+    setIsStarting(true);
+    setStartError('');
+
+    try {
+      await startSession(duration, lockMode, category, selectedPlantId);
+    } catch (err: any) {
+      setStartError(err?.message || String(err));
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const requestQuit = () => {
@@ -206,13 +217,21 @@ const Timer: React.FC = () => {
             </section>
 
             {!activeSession && (
-              <button
-                className="btn btn-primary start-btn flex-center"
-                onClick={handleStart}
-                style={{ marginTop: '12px', width: '100%' }}
-              >
-                Launch Focus Session
-              </button>
+              <>
+                {startError && (
+                  <div className="session-start-error" role="alert">
+                    {startError}
+                  </div>
+                )}
+                <button
+                  className="btn btn-primary start-btn flex-center"
+                  onClick={handleStart}
+                  disabled={isStarting}
+                  style={{ marginTop: '12px', width: '100%' }}
+                >
+                  {isStarting ? 'Starting Enforcement...' : 'Launch Focus Session'}
+                </button>
+              </>
             )}
           </div>
         </div>
