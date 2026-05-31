@@ -22,9 +22,9 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(circle at 70% 16%, rgba(52, 211, 153, 0.28), transparent 17%),
+    radial-gradient(circle at 70% 16%, rgba(var(--accent-primary-rgb), 0.28), transparent 17%),
     radial-gradient(circle at 85% 18%, rgba(96, 165, 250, 0.22), transparent 20%),
-    radial-gradient(circle at 82% 88%, rgba(52, 211, 153, 0.22), transparent 18%),
+    radial-gradient(circle at 82% 88%, rgba(var(--accent-primary-rgb), 0.22), transparent 18%),
     radial-gradient(circle at 58% 78%, rgba(139, 92, 246, 0.18), transparent 16%),
     radial-gradient(circle at 14% 70%, rgba(96, 165, 250, 0.18), transparent 20%);
   filter: blur(6px);

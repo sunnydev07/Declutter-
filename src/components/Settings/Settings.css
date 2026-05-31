@@ -130,15 +130,15 @@
 }
 
 input:checked + .slider {
-  background-color: rgba(52, 211, 153, 0.08);
-  border-color: rgba(52, 211, 153, 0.25);
-  box-shadow: 0 0 12px rgba(52, 211, 153, 0.08);
+  background-color: rgba(var(--accent-primary-rgb), 0.08);
+  border-color: rgba(var(--accent-primary-rgb), 0.25);
+  box-shadow: 0 0 12px rgba(var(--accent-primary-rgb), 0.08);
 }
 
 input:checked + .slider:before {
   background-color: var(--accent-primary);
   transform: translateX(22px);
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 8px rgba(var(--accent-primary-rgb), 0.3);
 }
 
 /* Color Preset Swatches */

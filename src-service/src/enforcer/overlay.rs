@@ -5,8 +5,9 @@ use once_cell::sync::Lazy;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::Graphics::Gdi::HBRUSH;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, RegisterClassW,
-    ShowWindow, HWND_TOPMOST, MSG, SW_SHOW, WM_DESTROY, WNDCLASSW, WS_EX_TOPMOST,
+    CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetMessageW,
+    PostMessageW, PostQuitMessage, RegisterClassW, ShowWindow, HWND_TOPMOST,
+    MSG, SW_SHOW, WM_CLOSE, WM_DESTROY, WNDCLASSW, WS_EX_TOPMOST,
     WS_POPUP, WS_VISIBLE, GetSystemMetrics, SM_CXVIRTUALSCREEN, SM_CYVIRTUALSCREEN,
     SM_XVIRTUALSCREEN, SM_YVIRTUALSCREEN, CS_HREDRAW, CS_VREDRAW,
 };
@@ -23,8 +24,13 @@ unsafe extern "system" fn overlay_window_proc(
     l_param: LPARAM,
 ) -> LRESULT {
     match msg {
+        WM_CLOSE => {
+            let _ = DestroyWindow(hwnd);
+            LRESULT(0)
+        }
         WM_DESTROY => {
-            DefWindowProcW(hwnd, msg, w_param, l_param)
+            PostQuitMessage(0);
+            LRESULT(0)
         }
         _ => DefWindowProcW(hwnd, msg, w_param, l_param),
     }
@@ -102,10 +108,10 @@ pub fn spawn_fullscreen_overlay() -> Result<(), String> {
                 // Standard message loop to keep window responsive
                 let mut msg = MSG::default();
                 while GetMessageW(&mut msg, None, 0, 0).as_bool() {
+                    let _ = DispatchMessageW(&msg);
                     if !IS_OVERLAY_ACTIVE.load(Ordering::SeqCst) {
                         break;
                     }
-                    let _ = DispatchMessageW(&msg);
                 }
             } else {
                 IS_OVERLAY_ACTIVE.store(false, Ordering::SeqCst);
@@ -122,7 +128,7 @@ pub fn close_fullscreen_overlay() {
     if let Ok(mut handle_guard) = H_OVERLAY_WINDOW.lock() {
         if let Some(hwnd) = *handle_guard {
             unsafe {
-                let _ = windows::Win32::UI::WindowsAndMessaging::DestroyWindow(hwnd);
+                let _ = PostMessageW(hwnd, WM_CLOSE, WPARAM(0), LPARAM(0));
             }
             *handle_guard = None;
         }

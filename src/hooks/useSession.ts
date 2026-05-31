@@ -10,15 +10,23 @@ import {
 } from '../utils/sounds';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+
+const isTauriRuntime = () =>
+  typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 export const useSession = () => {
   const [activeSession, setActiveSession] = useState<FocusSession | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [pauseCount, setPauseCount] = useState(0);
   const [streakCount] = useState(5); // Simulated default, will load dynamically
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fullLockFocusRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pauseSessionRef = useRef<() => void>(() => {});
+  const resumeSessionRef = useRef<() => void>(() => {});
+  const forceUnlockRef = useRef<() => Promise<void>>(async () => {});
 
   // Sync state on launch
   useEffect(() => {
@@ -162,14 +170,32 @@ export const useSession = () => {
     setActiveSession(newSession);
     setRemainingSeconds(durationMinutes * 60);
     setIsPaused(false);
+    setPauseCount(0);
 
     playAmbientNoise('rain');
+    void notify(
+      'Focus Session Started',
+      `${lockMode.toUpperCase()} lock is active for ${durationMinutes} minutes.`
+    );
   };
 
   const pauseSession = () => {
     if (!activeSession) return;
+
+    const settings = db.getSettings();
+
+    if (settings.allowPausing === false) {
+      return;
+    }
+
+    if (settings.maxPausesPerSession && pauseCount >= settings.maxPausesPerSession) {
+      return;
+    }
+
     setIsPaused(true);
+    setPauseCount((prev) => prev + 1);
     playTimerPausedChime();
+    void notify('Session Paused', 'Your focus timer is paused.');
   };
 
   const notify = async (title: string, body: string) => {
@@ -190,6 +216,7 @@ export const useSession = () => {
   const resumeSession = () => {
     if (!activeSession) return;
     setIsPaused(false);
+    void notify('Session Resumed', 'Your focus timer is running again.');
   };
 
   const stopServiceLock = async () => {
@@ -238,6 +265,7 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
+    setPauseCount(0);
 
     stopAmbientNoise();
     playSessionCompleteChime();
@@ -268,16 +296,99 @@ export const useSession = () => {
     setActiveSession(null);
     setRemainingSeconds(0);
     setIsPaused(false);
+    setPauseCount(0);
 
     stopAmbientNoise();
     playPlantWiltedChime();
     notify('Session Failed', 'Your plant has wilted because you abandoned your focus session.');
   };
 
+  const canPause = (() => {
+    const settings = db.getSettings();
+    if (settings.allowPausing === false) return false;
+    if (settings.maxPausesPerSession && pauseCount >= settings.maxPausesPerSession) return false;
+    return true;
+  })();
+
+  const updateTray = async () => {
+    if (!isTauriRuntime()) return;
+
+    try {
+      let statusText = 'Status: Idle';
+      if (activeSession) {
+        const mins = Math.floor(remainingSeconds / 60);
+        const secs = remainingSeconds % 60;
+        const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        statusText = `${activeSession.lockMode.toUpperCase()} Lock: ${timeStr}`;
+      }
+
+      const isStrictLockActive =
+        activeSession?.lockMode === 'view' || activeSession?.lockMode === 'full';
+
+      await invoke('update_tray_status', {
+        statusText,
+        canPause: !!activeSession && !isPaused && canPause,
+        canResume: !!activeSession && isPaused,
+        canQuitSession: !!activeSession && activeSession.plantType !== 'sword',
+        canExit: !isStrictLockActive,
+      });
+    } catch (err) {
+      console.error('Failed to update tray status:', err);
+    }
+  };
+
+  useEffect(() => {
+    pauseSessionRef.current = pauseSession;
+    resumeSessionRef.current = resumeSession;
+    forceUnlockRef.current = forceUnlock;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const cleanup: Array<() => void> = [];
+
+    const setupListeners = async () => {
+      if (!isTauriRuntime()) return;
+
+      try {
+        const unlistenPause = await listen('tray-pause', () => {
+          pauseSessionRef.current();
+        });
+        const unlistenResume = await listen('tray-resume', () => {
+          resumeSessionRef.current();
+        });
+        const unlistenQuit = await listen('tray-quit-session', () => {
+          void forceUnlockRef.current();
+        });
+
+        cleanup.push(unlistenPause, unlistenResume, unlistenQuit);
+
+        if (!isMounted) {
+          cleanup.forEach((unlisten) => unlisten());
+        }
+      } catch (err) {
+        console.warn('Tray events not available in this environment:', err);
+      }
+    };
+
+    void setupListeners();
+
+    return () => {
+      isMounted = false;
+      cleanup.forEach((unlisten) => unlisten());
+    };
+  }, []);
+
+  useEffect(() => {
+    void updateTray();
+  }, [activeSession, remainingSeconds, isPaused, canPause]);
+
   return {
     activeSession,
     remainingSeconds,
     isPaused,
+    pauseCount,
+    canPause,
     streakCount,
     startSession,
     pauseSession,

@@ -1,14 +1,21 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::mpsc;
+use std::thread;
 use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
+use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, HHOOK, WH_MOUSE_LL, WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_RBUTTONDOWN
+    CallNextHookEx, DispatchMessageW, GetMessageW, MSG, PeekMessageW,
+    PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx, PM_NOREMOVE,
+    WH_MOUSE_LL, WM_MOUSEMOVE, WM_LBUTTONDOWN, WM_RBUTTONDOWN, WM_QUIT
 };
 
 // Controls if mouse input should be blocked
 pub static IS_MOUSE_LOCKED: AtomicBool = AtomicBool::new(false);
 
 // Global Hook Handle
-static mut H_MOUSE_HOOK: Option<HHOOK> = None;
+// The hook handle lives on the pump thread; this tracks the thread so it can be stopped.
+static IS_MOUSE_HOOK_RUNNING: AtomicBool = AtomicBool::new(false);
+static MOUSE_HOOK_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 
 // Unsafe low-level hook callback procedure
 pub unsafe extern "system" fn low_level_mouse_proc(
@@ -39,33 +46,64 @@ pub unsafe extern "system" fn low_level_mouse_proc(
 }
 
 pub fn install_mouse_hook() -> Result<(), String> {
-    unsafe {
-        if let Some(_) = H_MOUSE_HOOK {
-            return Ok(());
-        }
+    if IS_MOUSE_HOOK_RUNNING.swap(true, Ordering::SeqCst) {
+        return Ok(());
+    }
 
-        let hook = windows::Win32::UI::WindowsAndMessaging::SetWindowsHookExW(
-            WH_MOUSE_LL,
-            Some(low_level_mouse_proc),
-            None,
-            0,
-        );
+    let (tx, rx) = mpsc::channel();
 
-        match hook {
-            Ok(h) => {
-                H_MOUSE_HOOK = Some(h);
-                Ok(())
+    thread::spawn(move || {
+        unsafe {
+            MOUSE_HOOK_THREAD_ID.store(GetCurrentThreadId(), Ordering::SeqCst);
+
+            let hook = SetWindowsHookExW(
+                WH_MOUSE_LL,
+                Some(low_level_mouse_proc),
+                None,
+                0,
+            );
+
+            match hook {
+                Ok(h) => {
+                    let mut msg = MSG::default();
+                    let _ = PeekMessageW(&mut msg, None, 0, 0, PM_NOREMOVE);
+                    let _ = tx.send(Ok(()));
+
+                    while GetMessageW(&mut msg, None, 0, 0).as_bool() {
+                        if !IS_MOUSE_LOCKED.load(Ordering::SeqCst) {
+                            break;
+                        }
+                        let _ = DispatchMessageW(&msg);
+                    }
+
+                    let _ = UnhookWindowsHookEx(h);
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(format!("Failed to install mouse hook: {:?}", e)));
+                }
             }
-            Err(e) => Err(format!("Failed to install mouse hook: {:?}", e)),
+
+            MOUSE_HOOK_THREAD_ID.store(0, Ordering::SeqCst);
+            IS_MOUSE_HOOK_RUNNING.store(false, Ordering::SeqCst);
+        }
+    });
+
+    match rx.recv() {
+        Ok(result) => result,
+        Err(e) => {
+            IS_MOUSE_HOOK_RUNNING.store(false, Ordering::SeqCst);
+            Err(format!("Failed to start mouse hook thread: {:?}", e))
         }
     }
 }
 
 pub fn uninstall_mouse_hook() {
-    unsafe {
-        if let Some(h) = H_MOUSE_HOOK {
-            let _ = windows::Win32::UI::WindowsAndMessaging::UnhookWindowsHookEx(h);
-            H_MOUSE_HOOK = None;
+    IS_MOUSE_LOCKED.store(false, Ordering::SeqCst);
+
+    let thread_id = MOUSE_HOOK_THREAD_ID.load(Ordering::SeqCst);
+    if thread_id != 0 {
+        unsafe {
+            let _ = PostThreadMessageW(thread_id, WM_QUIT, WPARAM(0), LPARAM(0));
         }
     }
 }

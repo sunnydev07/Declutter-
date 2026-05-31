@@ -13,6 +13,7 @@ const Timer: React.FC = () => {
     activeSession,
     remainingSeconds,
     isPaused,
+    canPause,
     startSession,
     pauseSession,
     resumeSession,
@@ -127,7 +128,7 @@ const Timer: React.FC = () => {
                       Resume Study
                     </button>
                   ) : (
-                    <button className="btn btn-secondary flex-1" onClick={pauseSession}>
+                    <button className="btn btn-secondary flex-1" onClick={pauseSession} disabled={!canPause}>
                       Pause Session
                     </button>
                   )

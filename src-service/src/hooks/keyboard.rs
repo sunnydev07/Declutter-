@@ -1,7 +1,12 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::mpsc;
+use std::thread;
 use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
+use windows::Win32::System::Threading::GetCurrentThreadId;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CallNextHookEx, HHOOK, KBDLLHOOKSTRUCT, LLKHF_ALTDOWN, WH_KEYBOARD_LL,
+    CallNextHookEx, DispatchMessageW, GetMessageW, KBDLLHOOKSTRUCT, LLKHF_ALTDOWN,
+    MSG, PeekMessageW, PostThreadMessageW, SetWindowsHookExW, UnhookWindowsHookEx,
+    PM_NOREMOVE, WH_KEYBOARD_LL, WM_QUIT,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     VK_LWIN, VK_RWIN, VK_TAB, VK_ESCAPE, VK_F4, VK_CONTROL
@@ -11,7 +16,9 @@ use windows::Win32::UI::Input::KeyboardAndMouse::{
 pub static IS_KEYBOARD_LOCKED: AtomicBool = AtomicBool::new(false);
 
 // Global Hook Handle
-static mut H_KEYBOARD_HOOK: Option<HHOOK> = None;
+// The hook handle lives on the pump thread; this tracks the thread so it can be stopped.
+static IS_KEYBOARD_HOOK_RUNNING: AtomicBool = AtomicBool::new(false);
+static KEYBOARD_HOOK_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 
 // Unsafe low-level hook callback procedure
 pub unsafe extern "system" fn low_level_keyboard_proc(
@@ -68,33 +75,64 @@ pub unsafe extern "system" fn low_level_keyboard_proc(
 }
 
 pub fn install_keyboard_hook() -> Result<(), String> {
-    unsafe {
-        if let Some(_) = H_KEYBOARD_HOOK {
-            return Ok(());
-        }
+    if IS_KEYBOARD_HOOK_RUNNING.swap(true, Ordering::SeqCst) {
+        return Ok(());
+    }
 
-        let hook = windows::Win32::UI::WindowsAndMessaging::SetWindowsHookExW(
-            WH_KEYBOARD_LL,
-            Some(low_level_keyboard_proc),
-            None,
-            0,
-        );
+    let (tx, rx) = mpsc::channel();
 
-        match hook {
-            Ok(h) => {
-                H_KEYBOARD_HOOK = Some(h);
-                Ok(())
+    thread::spawn(move || {
+        unsafe {
+            KEYBOARD_HOOK_THREAD_ID.store(GetCurrentThreadId(), Ordering::SeqCst);
+
+            let hook = SetWindowsHookExW(
+                WH_KEYBOARD_LL,
+                Some(low_level_keyboard_proc),
+                None,
+                0,
+            );
+
+            match hook {
+                Ok(h) => {
+                    let mut msg = MSG::default();
+                    let _ = PeekMessageW(&mut msg, None, 0, 0, PM_NOREMOVE);
+                    let _ = tx.send(Ok(()));
+
+                    while GetMessageW(&mut msg, None, 0, 0).as_bool() {
+                        if !IS_KEYBOARD_LOCKED.load(Ordering::SeqCst) {
+                            break;
+                        }
+                        let _ = DispatchMessageW(&msg);
+                    }
+
+                    let _ = UnhookWindowsHookEx(h);
+                }
+                Err(e) => {
+                    let _ = tx.send(Err(format!("Failed to install keyboard hook: {:?}", e)));
+                }
             }
-            Err(e) => Err(format!("Failed to install keyboard hook: {:?}", e)),
+
+            KEYBOARD_HOOK_THREAD_ID.store(0, Ordering::SeqCst);
+            IS_KEYBOARD_HOOK_RUNNING.store(false, Ordering::SeqCst);
+        }
+    });
+
+    match rx.recv() {
+        Ok(result) => result,
+        Err(e) => {
+            IS_KEYBOARD_HOOK_RUNNING.store(false, Ordering::SeqCst);
+            Err(format!("Failed to start keyboard hook thread: {:?}", e))
         }
     }
 }
 
 pub fn uninstall_keyboard_hook() {
-    unsafe {
-        if let Some(h) = H_KEYBOARD_HOOK {
-            let _ = windows::Win32::UI::WindowsAndMessaging::UnhookWindowsHookEx(h);
-            H_KEYBOARD_HOOK = None;
+    IS_KEYBOARD_LOCKED.store(false, Ordering::SeqCst);
+
+    let thread_id = KEYBOARD_HOOK_THREAD_ID.load(Ordering::SeqCst);
+    if thread_id != 0 {
+        unsafe {
+            let _ = PostThreadMessageW(thread_id, WM_QUIT, WPARAM(0), LPARAM(0));
         }
     }
 }

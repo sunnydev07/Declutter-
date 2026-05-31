@@ -18,7 +18,7 @@
   transform: translate(-50%, -50%);
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(52, 211, 153, 0.05), transparent 70%);
+  background: radial-gradient(circle, rgba(var(--accent-primary-rgb), 0.05), transparent 70%);
   filter: blur(80px);
   pointer-events: none;
   animation: mesh-drift-3 20s ease-in-out infinite;
@@ -185,7 +185,7 @@
 .sprout-icon {
   font-size: 3rem;
   animation: float-slow 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.2));
+  filter: drop-shadow(0 0 12px rgba(var(--accent-primary-rgb), 0.2));
 }
 
 .lockscreen-status {
@@ -217,7 +217,7 @@
   letter-spacing: -0.05em;
   color: var(--text-primary);
   margin: var(--space-md) 0;
-  text-shadow: 0 0 40px rgba(52, 211, 153, 0.1);
+  text-shadow: 0 0 40px rgba(var(--accent-primary-rgb), 0.1);
   animation: breathe-glow 4s ease-in-out infinite;
 }
 
